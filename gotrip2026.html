@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 地球模擬飛行與街景工具 (globe.gl)</title>
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2/dist/globe.gl.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","STKaiti","AR PL UKai TW",serif;display:flex;flex-direction:column;height:100vh;background:#0f172a;color:#f8fafc}
+header{background:#1e293b;color:#38bdf8;padding:12px 16px;font-size:1.2rem;font-weight:bold;border-bottom:1px solid #334155}
+.container{display:flex;flex:1;overflow:hidden}
+#map{flex:1;position:relative;min-width:0;min-height:300px}
+#globe{position:absolute;inset:0}
+#hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.9);color:#38bdf8;border:1px solid #38bdf8;padding:8px 20px;border-radius:20px;font-weight:bold;z-index:5;pointer-events:none}
+#err{display:none;position:absolute;inset:0;z-index:9;background:#0f172a;color:#fca5a5;padding:24px;line-height:1.8}
+#sidebar{width:340px;background:#1e293b;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;border-left:1px solid #334155}
+input,button,select{font-family:inherit}
+label{font-size:.88rem;color:#94a3b8;font-weight:600}
+.row{display:flex;gap:6px;margin-top:6px}
+input{flex:1;padding:8px 10px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:6px;outline:none}
+button{cursor:pointer;border:none;border-radius:6px;color:#fff}
+.small{padding:8px 12px;background:#334155}
+.primary{padding:12px;background:#0284c7;font-weight:bold;font-size:1rem}
+.card{background:#0f172a;padding:12px;border-radius:6px;font-size:.9rem;color:#cbd5e1;line-height:1.6;border:1px solid #334155}
+.mk{pointer-events:none;position:relative;width:0;height:0}
+.mk .dot{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-sizing:border-box;box-shadow:0 0 4px #000}
+.mk .lbl{position:absolute;left:11px;top:-10px;white-space:nowrap;font-size:13px;font-weight:600;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000}
+.mk.spot .lbl{color:#fde68a;font-size:12px}
+.mk.spot .dot,.mk.spot .lbl{pointer-events:auto;cursor:pointer}
+.mk.spot:hover .lbl{display:block!important;color:#fff}
+#globe.far .mk.spot .lbl{display:none}
+@media(max-width:768px){.container{flex-direction:column}#sidebar{width:100%;height:40vh;border-left:0}}
+
+/* 開頭畫面：厚片旅行社櫃檯 */
+#splash{position:fixed;inset:0;z-index:1000;background:#1f5460;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;transition:opacity .5s}
+#splash.hide{opacity:0;pointer-events:none}
+#splash .sign{position:absolute;top:4vh;left:50%;transform:translateX(-50%);background:#f4c95d;color:#3a2410;border:5px solid #3a2410;border-radius:28px 28px 10px 10px;padding:8px 28px;font-size:clamp(1.5rem,5vw,2.6rem);font-weight:900;letter-spacing:.12em;white-space:nowrap}
+#splash .poster{position:absolute;top:22vh;width:clamp(56px,10vw,110px);aspect-ratio:3/4;background:#f8f4ea;border:4px solid #3a2410;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:clamp(1.8rem,5vw,3.4rem)}
+#splash .p1{left:6%}#splash .p2{left:calc(6% + clamp(70px,12vw,130px))}#splash .p3{right:6%}#splash .p4{right:calc(6% + clamp(70px,12vw,130px))}
+#splash .scene{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-bottom:-6px;padding:0 16px;flex-wrap:wrap}
+#splash .clerk{font-size:clamp(110px,24vh,200px);line-height:1;user-select:none}
+#splash .clerk.talking{animation:bob .45s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+#splash .bubble{position:relative;background:#fff;color:#2b2118;border-radius:20px;padding:14px 18px;max-width:min(380px,86vw);font-size:clamp(1rem,2.6vw,1.2rem);line-height:1.7;margin-bottom:clamp(60px,12vh,120px)}
+#splash .bubble::after{content:"";position:absolute;left:-12px;bottom:22px;border:12px solid transparent;border-right-color:#fff;border-left:0}
+#splash .counter{width:100%;background:#8a5a3b;border-top:14px solid #c28a5a;height:clamp(150px,26vh,230px);display:flex;align-items:center;justify-content:center;gap:clamp(14px,5vw,48px);position:relative}
+#splash .counter .item{font-size:clamp(2rem,6vw,3.4rem)}
+#splash .bookwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+#mapbtn{font-size:clamp(3rem,9vw,4.6rem);background:#f4c95d;border:5px solid #3a2410;border-radius:20px;padding:6px 22px;cursor:pointer;box-shadow:0 0 0 0 rgba(244,201,93,.8);animation:ring 1.8s ease-out infinite}
+#mapbtn:hover{background:#ffd978}
+#mapbtn:focus-visible,#speak:focus-visible{outline:4px solid #fff;outline-offset:3px}
+@keyframes ring{to{box-shadow:0 0 0 22px rgba(244,201,93,0)}}
+#splash .tip{color:#fff;font-weight:700;font-size:1rem}
+#speak{position:absolute;top:12px;right:12px;padding:8px 14px;background:#f8f4ea;color:#3a2410;border-radius:20px;font-weight:700}
+@media(max-width:700px){#splash .poster{display:none}#splash .bubble::after{display:none}}
+@media(prefers-reduced-motion:reduce){#splash .clerk.talking,#mapbtn{animation:none}}
+#splash .caret{display:none;animation:blink 1s steps(1) infinite}
+#splash .typing .caret{display:inline}
+@keyframes blink{50%{opacity:0}}
+#home{background:#334155;padding:6px 12px;font-size:.9rem}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="sign">🍞 厚片旅行社</div>
+  <div class="poster p1">🗼</div><div class="poster p2">🏝️</div><div class="poster p3">🗽</div><div class="poster p4">🏯</div>
+  <button id="speak" class="small">🔊 播放語音</button>
+  <div class="scene">
+    <div class="clerk" id="clerk" role="img" aria-label="旅行社櫃檯小姐">👩‍💼</div>
+    <div class="bubble" id="bubble" aria-label="歡迎來到厚片旅行社，請點選畫面上的地圖按鈕設定起點與終點，祝您旅途愉快。"><span id="btxt"></span><span class="caret">▍</span></div>
+  </div>
+  <div class="counter">
+    <span class="item">🧳</span><span class="item">🛎️</span>
+    <div class="bookwrap"><button id="mapbtn" aria-label="開啟地圖，設定起點與終點">🗺️</button><div class="tip">點選地圖設定起點與終點</div></div>
+    <span class="item">📖</span><span class="item">✈️</span>
+  </div>
+</div>
+<script>
+(function(){
+  const TEXT='歡迎來到厚片旅行社，請點選畫面上的地圖按鈕設定起點與終點，祝您旅途愉快。';
+  const splash=document.getElementById('splash'),clerk=document.getElementById('clerk');
+  let spoken=false;
+  const bubble=document.getElementById('bubble'),btxt=document.getElementById('btxt');
+  // 打字機效果（以字元陣列處理，避免 emoji 被切半）
+  const setText=Object.getOwnPropertyDescriptor(Node.prototype,'textContent').set;
+  window.typeInto=function(el,text,speed,done){
+    clearInterval(el._tw);
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches){setText.call(el,text);done&&done();return}
+    const ch=Array.from(text);let i=0;setText.call(el,'');
+    el._tw=setInterval(()=>{i++;setText.call(el,ch.slice(0,i).join(''));if(i>=ch.length){clearInterval(el._tw);done&&done()}},speed);
+  };
+  function startTyping(){bubble.classList.add('typing');typeInto(btxt,TEXT,160,()=>bubble.classList.remove('typing'))}
+  function speak(){
+    if(!bubble.classList.contains('typing'))startTyping();
+    if(!('speechSynthesis' in window))return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(TEXT);u.lang='zh-TW';u.rate=0.95;
+    const vs=speechSynthesis.getVoices();
+    const v=vs.find(x=>/zh[-_]TW|Hant/i.test(x.lang))||vs.find(x=>/^zh/i.test(x.lang));
+    if(v)u.voice=v;
+    u.onstart=()=>{spoken=true;clerk.classList.add('talking')};
+    u.onend=u.onerror=()=>clerk.classList.remove('talking');
+    speechSynthesis.speak(u);
+  }
+  setTimeout(speak,400); // 瀏覽器可能因自動播放限制而靜音，此時改在第一次點擊時播放
+  document.addEventListener('pointerdown',()=>{if(!spoken)speak()},{once:true});
+  document.getElementById('speak').onclick=speak;
+  document.getElementById('mapbtn').onclick=()=>{
+    if('speechSynthesis' in window)speechSynthesis.cancel();
+    splash.classList.add('hide');
+  };
+  window.showSplash=(withVoice)=>{splash.classList.remove('hide');spoken=false;if(withVoice)speak()};
+})();
+</script>
+<header style="display:flex;justify-content:space-between;align-items:center"><span>🌍 3D 地球模擬飛行與街景工具</span><button id="home" onclick="showSplash()">🏠 回到櫃檯</button></header>
+<div class="container">
+  <div id="map"><div id="hint">📍 請點擊地球選擇「出發地」</div><div id="globe"></div><div id="err"></div><div style="position:absolute;right:8px;bottom:6px;z-index:5;font-size:11px;color:#94a3b8">圖資：© Esri / © OpenStreetMap contributors / 內政部國土測繪中心</div></div>
+  <div id="sidebar">
+    <div class="card" style="border-left:4px solid #38bdf8">💡 第 1 下點擊選起點，第 2 下選目的地。左鍵拖曳旋轉，滾輪縮放。</div>
+    <div><label>🚩 出發地</label><div class="row"><input id="s-in" value="台北"><button class="small" id="s-btn">搜尋</button></div></div>
+    <div><label>🏁 目的地</label><div class="row"><input id="e-in" value="東京"><button class="small" id="e-btn">搜尋</button></div></div>
+    <div><label>🗺️ 底圖</label><div class="row"><select id="basemap" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:6px"><option value="esriStreet">Esri 街道圖</option><option value="nlsc">台灣通用電子地圖（中文，僅台灣範圍）</option><option value="esriSat">Esri 衛星影像</option><option value="osm">OpenStreetMap（localhost 才可能可用）</option></select></div></div>
+    <button id="end-trip" style="display:none;padding:12px;background:#b45309;font-weight:bold;font-size:1rem">🔄 結束旅程（重新選擇起點）</button>
+    <button class="primary" id="fly">🚀 開始 3D 模擬飛行</button>
+    <div class="card"><b>🏞️ 附近景點</b><div id="spots" style="margin-top:8px;line-height:1.9;color:#94a3b8">飛抵目的地後顯示</div></div>
+    <div class="card"><div id="info"><b>航程資訊：</b>請設定地點</div>
+      <a id="sv" target="_blank" style="display:none;margin-top:12px;text-align:center;background:#10b981;color:#fff;padding:10px;border-radius:6px;text-decoration:none;font-weight:bold">🌐 開啟目的地 Google 街景</a></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id), hint=$('hint');
+Object.defineProperty(hint,'textContent',{configurable:true,
+  get(){return hint.getAttribute('data-full')||''},
+  set(v){hint.setAttribute('data-full',v);typeInto(hint,v,35)}});
+function showErr(m){const e=$('err');e.style.display='block';e.innerHTML='<b>⚠️ 3D 地球無法顯示</b><br>'+m}
+if(typeof Globe==='undefined'){showErr('globe.gl 沒有載入成功（網路或 CDN 被擋）。');throw 0}
+
+let S=null,E=null,state='START',plane=null,timer=null;
+const TILES={
+  nlsc:(x,y,l)=>`https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/${l}/${y}/${x}`,
+  osm:(x,y,l)=>`https://tile.openstreetmap.org/${l}/${x}/${y}.png`,
+  esriStreet:(x,y,l)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${l}/${y}/${x}`,
+  esriSat:(x,y,l)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`
+};
+const TEX='https://unpkg.com/three-globe/example/img/';
+const world=Globe()($('globe'))
+  .globeImageUrl(TEX+'earth-blue-marble.jpg')
+  .globeTileEngineUrl(TILES.esriStreet)
+  .backgroundImageUrl(TEX+'night-sky.png')
+  .atmosphereColor('#38bdf8')
+  .pointAltitude(0.01).pointRadius(d=>d.r||0.5).pointColor('color')
+  .labelLat('lat').labelLng('lng').labelText('text').labelSize(d=>d.size||1.4).labelDotRadius(d=>d.dot||0.4).labelColor(()=>'#fff').labelAltitude(0.003)
+  .arcColor(()=>['#22d3ee','#a5f3fc']).arcStroke(0.15).arcDashLength(0.4).arcDashGap(0.15).arcDashAnimateTime(2500)
+  .htmlLat('lat').htmlLng('lng').htmlAltitude('alt')
+  .htmlElement(d=>{
+    const e=document.createElement('div');
+    if(d.type==='plane'){e.textContent='✈️';e.style.cssText='font-size:28px;pointer-events:none';return e}
+    e.className='mk '+d.type;
+    if(d.type==='spot')e.onclick=()=>window.open(svUrl(d.lat,d.lng),'_blank','noopener');
+    const dot=document.createElement('span');dot.className='dot';dot.style.background=d.color;
+    const t=document.createElement('span');t.className='lbl';t.textContent=d.text;
+    e.append(dot,t);return e});
+if(typeof world.htmlTransitionDuration==='function')world.htmlTransitionDuration(0); // 取消預設 1 秒位移延遲
+if(typeof world.htmlElementVisibilityModifier==='function')world.htmlElementVisibilityModifier((el,vis)=>{el.style.display=vis?'':'none'});
+const fit=()=>world.width($('map').clientWidth).height($('map').clientHeight);
+fit();addEventListener('resize',fit);
+world.pointOfView({lat:23.5,lng:121.5,altitude:2.2});
+let lastStroke=0.15;
+setInterval(()=>{try{
+  const alt=world.pointOfView().altitude;
+  $('globe').classList.toggle('far',alt>0.6);
+  // 航線粗細隨縮放調整：放大時變細，約維持 2~3 像素
+  const st=Math.min(0.4,Math.max(0.01,alt*0.15));
+  if(Math.abs(Math.log(st/lastStroke))>0.15){lastStroke=st;world.arcStroke(st)}
+}catch(e){}},300);
+
+const dist=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return Math.round(12742*Math.asin(Math.sqrt(h)))};
+// 大圓插值
+function slerp(a,b,f){const r=Math.PI/180,v=(p)=>[Math.cos(p.lat*r)*Math.cos(p.lng*r),Math.cos(p.lat*r)*Math.sin(p.lng*r),Math.sin(p.lat*r)];
+  const A=v(a),B=v(b),w=Math.acos(Math.min(1,A[0]*B[0]+A[1]*B[1]+A[2]*B[2]))||1e-9,s=Math.sin(w),k1=Math.sin((1-f)*w)/s,k2=Math.sin(f*w)/s;
+  const x=k1*A[0]+k2*B[0],y=k1*A[1]+k2*B[1],z=k1*A[2]+k2*B[2];return{lat:Math.atan2(z,Math.hypot(x,y))/r,lng:Math.atan2(y,x)/r}}
+const arcAlt=()=>Math.min(Math.max(dist(S.lat,S.lng,E.lat,E.lng)/6371*0.15,0.01),0.3); // 航線高度依距離縮放，短程更平緩
+
+async function rev(lat,lng){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&accept-language=zh-TW&lat=${lat}&lon=${lng}`);const d=await r.json();if(d.display_name)return d.display_name.split(',')[0]}catch(e){}return `${lat}, ${lng}`}
+async function geo(q){try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&accept-language=zh-TW&q=${encodeURIComponent(q)}`);const d=await r.json();if(d[0])return{lat:+d[0].lat,lng:+d[0].lon,name:d[0].display_name.split(',')[0]}}catch(e){}return null}
+
+let SPOTS=[],MK=[],PLANE=null,arrived=false;
+const svUrl=(lat,lng)=>`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+const allMarks=()=>PLANE?[...MK,PLANE]:MK;
+function drawMarkers(){
+  MK=[];
+  if(!arrived){ // 飛抵後不再顯示起點與終點標示
+    if(S)MK.push({type:'start',lat:S.lat,lng:S.lng,alt:0,color:'#ef4444',text:'🚩 '+S.name});
+    if(E)MK.push({type:'end',lat:E.lat,lng:E.lng,alt:0,color:'#22c55e',text:'🏁 '+E.name});
+  }
+  SPOTS.forEach(p=>MK.push({type:'spot',lat:p.lat,lng:p.lng,alt:0,color:'#f59e0b',text:p.name}));
+  world.htmlElementsData(allMarks());
+}
+function render(){
+  $('end-trip').style.display=(S&&E)?'block':'none';
+  arrived=false;PLANE=null;SPOTS=[];$('spots').textContent='飛抵目的地後顯示';
+  drawMarkers();
+  if(S&&E){
+    world.arcsData([{startLat:S.lat,startLng:S.lng,endLat:E.lat,endLng:E.lng}]).arcAltitude(arcAlt());
+    const m=slerp(S,E,.5),d=dist(S.lat,S.lng,E.lat,E.lng);
+    $('info').innerHTML=`<b>起點：</b>${S.name}<br><b>終點：</b>${E.name}<br><b>預估航程距離：</b>約 ${d} 公里`;
+    $('sv').href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${E.lat},${E.lng}`;$('sv').style.display='block';
+  }else world.arcsData([]);
+}
+function reset(){clearInterval(timer);PLANE=null;arrived=false;MK=[];world.htmlElementsData([]);S=E=null;SPOTS=[];$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
+
+world.onGlobeClick(async({lat,lng})=>{
+  lat=+lat.toFixed(4);lng=+lng.toFixed(4);
+  if(state==='DONE')return; // 需按「結束旅程」才能重新選起點
+  if(state==='START'){
+    reset();state='END';hint.textContent='⏳ 讀取中...';
+    S={lat,lng,name:await rev(lat,lng)};$('s-in').value=S.name;hint.textContent='🏁 請點擊地球選擇「目的地」';render();
+  }else{
+    state='DONE';hint.textContent='⏳ 讀取中...';
+    E={lat,lng,name:await rev(lat,lng)};$('e-in').value=E.name;hint.textContent='✨ 設定完成！可開始飛行，或按「結束旅程」重新選點';render();
+  }
+});
+
+$('end-trip').onclick=()=>{reset();world.arcsData([]);state='START';$('s-in').value='';$('e-in').value='';$('end-trip').style.display='none';hint.textContent='📍 請點擊地球選擇「出發地」';world.pointOfView({lat:23.5,lng:121.5,altitude:2.2});showSplash(true)};
+$('basemap').onchange=e=>world.globeTileEngineUrl(TILES[e.target.value]);
+$('s-btn').onclick=async()=>{const r=await geo($('s-in').value);if(!r)return alert('找不到該地點！');clearInterval(timer);PLANE=null;S=r;if(state==='START')state='END';hint.textContent='🏁 請點擊地球選擇「目的地」';render()};
+$('e-btn').onclick=async()=>{const r=await geo($('e-in').value);if(!r)return alert('找不到該地點！');clearInterval(timer);PLANE=null;E=r;state='DONE';hint.textContent='✨ 設定完成！';render()};
+
+
+// 景點搜尋：Overpass(OSM 旅遊景點) → 失敗或無結果時改用維基百科地理搜尋
+async function loadSpots(p){
+  const box=$('spots');box.textContent='⏳ 搜尋附近景點...';let list=[];
+  try{
+    const q=`[out:json][timeout:15];nwr["tourism"~"attraction|viewpoint|museum|theme_park|zoo"]["name"](around:8000,${p.lat},${p.lng});out center 40;`;
+    const d=await (await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))).json();
+    list=d.elements.map(e=>({lat:e.lat??(e.center&&e.center.lat),lng:e.lon??(e.center&&e.center.lon),name:e.tags['name:zh-TW']||e.tags['name:zh']||e.tags.name})).filter(x=>x.lat&&x.name);
+  }catch(e){}
+  if(!list.length){
+    try{
+      const d=await (await fetch(`https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${p.lat}|${p.lng}&gsradius=10000&gslimit=20&format=json&origin=*`)).json();
+      list=d.query.geosearch.map(x=>({lat:x.lat,lng:x.lon,name:x.title}));
+    }catch(e){}
+  }
+  const seen=new Set();
+  list=list.filter(x=>!seen.has(x.name)&&seen.add(x.name)).sort((a,b)=>dist(p.lat,p.lng,a.lat,a.lng)-dist(p.lat,p.lng,b.lat,b.lng)).slice(0,15);
+  if(!E||E!==p)return; // 使用者已改變目的地
+  SPOTS=list;drawMarkers();box.textContent='';
+  hint.textContent=list.length?`🎉 已飛抵 ${p.name}，找到 ${list.length} 個景點，點擊標記開啟 Google 街景`:`🎉 已飛抵 ${p.name}`;
+  if(!list.length){box.textContent='找不到附近景點資料（可能是網路或服務暫時無法使用）';return}
+  list.forEach(x=>{const row=document.createElement('div'),a=document.createElement('span'),g=document.createElement('a');
+    a.textContent='📍 '+x.name;a.style.cssText='cursor:pointer;color:#fbbf24';
+    a.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
+    g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='_blank';g.rel='noopener';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
+    row.append(a,g);box.appendChild(row)});
+}
+
+$('fly').onclick=()=>{
+  if(!S||!E)return alert('請先選擇起點與目的地！');
+  clearInterval(timer);
+  arrived=false;SPOTS=[];PLANE=null;$('spots').textContent='飛行中...';drawMarkers();
+  const total=200,h=arcAlt(),d=dist(S.lat,S.lng,E.lat,E.lng);let step=0;const keepAlt=world.pointOfView().altitude,destE=E; // 點擊當下的縮放
+  timer=setInterval(()=>{
+    step++;const f=step/total,p=slerp(S,E,f),alt=Math.sin(f*Math.PI)*h;
+    if(!PLANE)PLANE={type:'plane',lat:0,lng:0,alt:0};PLANE.lat=p.lat;PLANE.lng=p.lng;PLANE.alt=alt;world.htmlElementsData(allMarks());
+    world.pointOfView({lat:p.lat,lng:p.lng,altitude:keepAlt});
+    if(step>=total){clearInterval(timer);setTimeout(()=>{if(E!==destE)return;arrived=true;PLANE=null;drawMarkers();hint.textContent='🎉 已飛抵 '+E.name+'，搜尋附近景點中...';world.arcsData([]);world.pointOfView({lat:E.lat,lng:E.lng,altitude:keepAlt},1500);loadSpots(E)},800)}  // 飛機停在終點 0.8 秒後才收尾
+  },30);
+};
+</script>
+</body>
+</html>
