@@ -1,22 +1,17 @@
 {
   "name": "厚片旅行社",
-  "short_name": "Gotrip2026 ",
+  "short_name": "厚片旅行",
+  "description": "3D 地球模擬飛行與街景工具",
+  "id": "./",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
+  "lang": "zh-TW",
   "background_color": "#0b1220",
   "theme_color": "#0284c7",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
