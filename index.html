@@ -14,6 +14,15 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <!-- ===== [PWA 新增 1/4] 結束 ===== -->
+<!-- ===== [VRM 新增 1/5] importmap：three 0.184.0 與 @pixiv/three-vrm 3.5.3（固定版本）開始 ===== -->
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.min.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+  "@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.3/lib/three-vrm.module.min.js"
+}}
+</script>
+<!-- ===== [VRM 新增 1/5] 結束 ===== -->
 <script src="https://cdn.jsdelivr.net/npm/globe.gl@2/dist/globe.gl.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -61,8 +70,31 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 #splash .scene{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-bottom:-6px;padding:0 16px;flex-wrap:nowrap;z-index:2}
 #splash .clerk{font-size:clamp(110px,24vh,200px);line-height:1;user-select:none;margin-bottom:clamp(5px,2vh,20px)}
 #splash .clerk.photo{font-size:0;height:clamp(190px,44vh,360px);background-repeat:no-repeat;background-size:contain;background-position:center bottom;margin-bottom:0}
-#splash .clerk.talking{animation:bob .45s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(-8px)}}
+/* ===== [VRM 新增 2/5] VRM 人物容器樣式 開始 ===== */
+#splash .clerk.vrm{font-size:0;position:relative;height:clamp(240px,54vh,500px);aspect-ratio:7/10;max-width:40vw;margin-bottom:calc(-1 * clamp(8px,2vh,22px))}
+#splash .clerk.vrm canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#splash .clerk .vrm-load{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;font-size:.95rem;color:#fff;line-height:1.5;padding:8px}
+#splash .vrm-load .spin{width:clamp(34px,6vh,52px);aspect-ratio:1;border:5px solid rgba(255,255,255,.25);border-top-color:#f4c95d;border-radius:50%;animation:vspin .9s linear infinite}
+#splash .vrm-load .lt{font-weight:700}
+#splash .vrm-load .bar{width:min(80%,170px);height:8px;background:rgba(255,255,255,.25);border-radius:6px;overflow:hidden}
+#splash .vrm-load .bar i{display:block;height:100%;width:0;background:#f4c95d;transition:width .2s}
+#splash .vrm-load .ls{font-size:.8rem;color:#cbd5e1;min-height:1.2em}
+#splash .vrm-load.fail .spin{display:none}
+@keyframes vspin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#splash .vrm-load .spin{animation:none}}
+/* ===== [VRM 新增 2/5] 結束 ===== */
+/* ===== [導覽員 新增 1/4] 手機版：人物說明介紹文 樣式 開始 ===== */
+#guide{display:none;position:fixed;left:6px;right:6px;bottom:calc(40vh + 6px);z-index:50;align-items:flex-end;gap:6px;pointer-events:none}
+#guide.on{display:flex}
+#guide>*{pointer-events:auto}
+#guide .g-av{flex:none;position:relative;height:clamp(150px,26vh,230px);aspect-ratio:7/9;max-width:36vw;display:flex;align-items:center;justify-content:center;font-size:4rem;color:#fff}
+#guide .g-av canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#guide .g-bub{flex:1;min-width:0;background:#fff;color:#2b2118;border-radius:16px;padding:8px 12px 10px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#guide .g-top{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;margin-bottom:4px}
+#guide .g-top button{background:#e2e8f0;color:#2b2118;border:0;border-radius:6px;padding:2px 8px;margin-left:4px;cursor:pointer}
+#guide .g-txt{max-height:clamp(96px,20vh,170px);overflow-y:auto;font-size:.95rem;line-height:1.7;word-break:break-word;white-space:pre-wrap}
+@media(min-width:769px){#guide{right:auto;left:16px;bottom:16px;width:min(560px,calc(100vw - 340px - 48px))}}
+/* ===== [導覽員 新增 1/4] 結束 ===== */
 
 /* 關鍵修改：設定寬度限制，使對話框文字超過 10 個字時自動斷行 */
 #splash .bubble{
@@ -90,11 +122,25 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 #splash .tip{color:#fff;font-weight:700;font-size:1rem}
 #speak{position:absolute;top:12px;right:12px;padding:8px 14px;background:#f8f4ea;color:#3a2410;border-radius:20px;font-weight:700;z-index:2}
 @media(max-width:700px){#splash .poster{display:none}#splash .bubble::after{display:none}}
-@media(prefers-reduced-motion:reduce){#splash .clerk.talking,#mapbtn{animation:none}}
+@media(prefers-reduced-motion:reduce){#mapbtn{animation:none}}
 #splash .caret{display:none;animation:blink 1s steps(1) infinite}
 #splash .typing .caret{display:inline}
 @keyframes blink{50%{opacity:0}}
 #home{background:#334155;padding:6px 12px;font-size:.9rem}
+/* ===== [開門鈕 新增 1/2] 樣式 ===== */
+#door{position:fixed;inset:0;z-index:1100;overflow:hidden}
+#door .dl,#door .dr{position:absolute;top:0;bottom:0;width:50.5%;background:repeating-linear-gradient(90deg,#8a5a3b 0 38px,#7a4e32 38px 40px);transition:transform .9s cubic-bezier(.7,0,.3,1)}
+#door .dl{left:0;border-right:6px solid #3a2410;transform-origin:left}
+#door .dr{right:0;border-left:6px solid #3a2410}
+#door .dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:16px;transition:opacity .4s}
+#door .dsign{background:#f4c95d;color:#3a2410;border:5px solid #3a2410;border-radius:28px 28px 10px 10px;padding:8px 28px;font-size:clamp(1.5rem,5vw,2.6rem);font-weight:900;letter-spacing:.12em}
+#doorbtn{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;background:#f4c95d;color:#3a2410;border:5px solid #3a2410;border-radius:20px;padding:12px 34px;cursor:pointer;animation:ring 1.8s ease-out infinite}
+#doorbtn:hover{background:#ffd978}
+#doorbtn:focus-visible{outline:4px solid #fff;outline-offset:3px}
+#door .dtip{color:#fff;font-weight:700;text-shadow:0 0 4px #000}
+#door.open .dl{transform:translateX(-100%)}#door.open .dr{transform:translateX(100%)}#door.open .dc{opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#doorbtn{animation:none}#door .dl,#door .dr{transition:none}}
+/* ===== [開門鈕 新增 1/2] 結束 ===== */
 /* ===== [PWA 新增 2/4] 安裝按鈕與 iOS 提示樣式 開始 ===== */
 #pwa-install{display:none;position:fixed;right:14px;bottom:14px;z-index:99999;background:#0284c7;color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:1rem;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 #pwa-install:hover{background:#0369a1}
@@ -108,13 +154,14 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 <button id="pwa-install" type="button" aria-label="安裝厚片旅行社 App">📲 安裝 App</button>
 <div id="pwa-ios-tip"><button type="button" id="pwa-ios-close">✕</button>📲 安裝方式：點 Safari 下方的「分享」圖示，再選「加入主畫面」。</div>
 <!-- ===== [PWA 新增 3/4] 結束 ===== -->
+<div id="door" role="dialog" aria-label="厚片旅行社入口"><div class="dl"></div><div class="dr"></div><div class="dc"><div class="dsign">🍞 厚片旅行社</div><button id="doorbtn" type="button" autofocus>🚪 開門</button><div class="dtip">點一下開門，服務人員會為您語音說明</div></div></div>
 <div id="splash">
   <div class="sign">🍞 厚片旅行社</div>
   <div class="poster p1">🗼</div><div class="poster p2">🏝️</div><div class="poster p3">🗽</div><div class="poster p4">🏯</div>
-  <button id="speak" class="small">🔊 播放語音</button>
+  <button id="speak" class="small">🔊 語音：開</button>
   <div class="scene">
-    <div class="clerk" id="clerk" role="img" aria-label="旅行社櫃檯小姐">👩‍💼</div>
-    <div class="bubble" id="bubble" aria-label="歡迎來到厚片旅行社，請點選畫面上的地圖按鈕設定起點與終點，祝您旅途愉快。"><span id="btxt"></span><span class="caret">▍</span></div>
+    <div class="clerk vrm" id="clerk" role="img" aria-label="旅行社櫃檯小姐"><div class="vrm-load"><div class="spin"></div><div class="lt">⏳ 載入人物中…</div><div class="bar"><i></i></div><div class="ls">準備連線…</div></div></div><!-- [VRM 新增 3/5] 載入失敗才由 clerkEmoji() 改回 EMOJI -->
+    <div class="bubble" id="bubble" aria-label="歡迎來到厚片旅行社，請點選畫面上的地圖按鈕設定起點與終點，祝您旅途愉快。"><span id="btxt" data-avatar-text></span><span class="caret">▍</span></div>
   </div>
   <div class="counter">
     <span class="item">🧳</span><span class="item">🛎️</span>
@@ -126,13 +173,9 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 (function(){
   const TEXT='歡迎來到厚片旅行社，請點選畫面上的地圖按鈕設定起點與終點，祝您旅途愉快。';
   const splash=document.getElementById('splash'),clerk=document.getElementById('clerk');
-  // 若同資料夾有 girl.png（已去背的透明 PNG）就用圖片，載入失敗則保留 EMOJI
-  const probe=new Image();
-  probe.onload=()=>{clerk.textContent='';clerk.classList.add('photo');
-    clerk.style.backgroundImage='url("girl.png")';
-    clerk.style.aspectRatio=probe.naturalWidth+'/'+probe.naturalHeight};
-  probe.onerror=()=>{};
-  probe.src='girl.png';
+  // [VRM 新增 3/5] 人物改用 VRM（見下方 type="module" 的 script）；僅在網路讀不到模型時，才退回 EMOJI
+  window.clerkEmoji=()=>{clerk.classList.remove('vrm');clerk.textContent='👩‍💼'};
+  setTimeout(()=>{if(!window.__vrmStarted)window.clerkEmoji()},4000); // 瀏覽器不支援 module/importmap 時的保險
   let spoken=false;
   const bubble=document.getElementById('bubble'),btxt=document.getElementById('btxt');
   // 打字機效果（以字元陣列處理，避免 emoji 被切半）
@@ -141,32 +184,245 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
     clearInterval(el._tw);
     if(matchMedia('(prefers-reduced-motion: reduce)').matches){setText.call(el,text);done&&done();return}
     const ch=Array.from(text);let i=0;setText.call(el,'');
-    el._tw=setInterval(()=>{i++;setText.call(el,ch.slice(0,i).join(''));if(i>=ch.length){clearInterval(el._tw);done&&done()}},speed);
+    el._tw=setInterval(()=>{i++;setText.call(el,ch.slice(0,i).join(''));el.dispatchEvent(new CustomEvent('typechar',{bubbles:true,detail:ch[i-1]})); // [嘴型] 每打一個字通知人物
+      if(i>=ch.length){clearInterval(el._tw);done&&done()}},speed);
   };
   function startTyping(){bubble.classList.add('typing');typeInto(btxt,TEXT,160,()=>bubble.classList.remove('typing'))}
-  function speak(){
-    if(!bubble.classList.contains('typing'))startTyping();
-    if(!('speechSynthesis' in window))return;
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(TEXT);u.lang='zh-TW';u.rate=0.95;
-    const vs=speechSynthesis.getVoices();
-    const v=vs.find(x=>/zh[-_]TW|Hant/i.test(x.lang))||vs.find(x=>/^zh/i.test(x.lang));
-    if(v)u.voice=v;
-    u.onstart=()=>{spoken=true;clerk.classList.add('talking')};
-    u.onend=u.onerror=()=>clerk.classList.remove('talking');
-    speechSynthesis.speak(u);
+  // [嘴型/導覽員] 共用語音：以 id 避免舊語音的 onend 蓋掉新語音的狀態，並通知人物是否正在說話
+  let spkId=0;
+  const emitSpeaking=b=>document.dispatchEvent(new CustomEvent('avatar-speaking',{detail:b}));
+  // [Google 台灣中文語音] 挑選順序：Google + zh-TW → 其他 zh-TW → 繁體中文 → 任何中文；英文則優先 Google 英文
+  const normL=x=>x.lang.replace('_','-').toLowerCase();
+  function pickVoice(lang){
+    const vs=speechSynthesis.getVoices(),L=lang.replace('_','-').toLowerCase(),pre=L.slice(0,2),isG=x=>/google/i.test(x.name);
+    if(pre==='zh')return vs.find(x=>isG(x)&&normL(x)==='zh-tw')||vs.find(x=>normL(x)==='zh-tw')||vs.find(x=>/hant/.test(normL(x)))||vs.find(x=>normL(x).startsWith('zh'))||null;
+    return vs.find(x=>isG(x)&&normL(x)===L)||vs.find(x=>normL(x)===L)||vs.find(x=>normL(x).startsWith(pre))||null;
   }
-  setTimeout(speak,400); // 瀏覽器可能因自動播放限制而靜音，此時改在第一次點擊時播放
-  document.addEventListener('pointerdown',()=>{if(!spoken)speak()},{once:true});
-  document.getElementById('speak').onclick=speak;
-  document.getElementById('mapbtn').onclick=()=>{
-    if('speechSynthesis' in window)speechSynthesis.cancel();
-    splash.classList.add('hide');
+  // 語音清單常是非同步載入：最多等 1.2 秒，避免一開始挑不到 Google 語音
+  function voicesReady(){return new Promise(res=>{
+    if(speechSynthesis.getVoices().length)return res();
+    let done=false;const f=()=>{if(done)return;done=true;speechSynthesis.removeEventListener('voiceschanged',f);res()};
+    speechSynthesis.addEventListener('voiceschanged',f);setTimeout(f,1200)})}
+  // 長文字切成短句分段播放（網路語音遇到太長的文字可能中途停止）
+  function chunkText(text,max){
+    const parts=text.match(/[^。！？!?；;\n]+[。！？!?；;]*\n?/g)||[text],out=[];let cur='';
+    for(const p of parts){if(cur&&(cur+p).length>max){out.push(cur);cur=p}else cur+=p}
+    if(cur.trim())out.push(cur);return out.map(s=>s.trim()).filter(Boolean);
+  }
+  // [語音預設開啟] 預設為開；使用者可用開關關閉（記在 localStorage）。
+  // 瀏覽器在使用者「尚未操作」前會擋自動語音：此時先排隊，第一次點擊/觸控/按鍵時自動補播。
+  let voiceOn=true;try{voiceOn=localStorage.getItem('gotrip_voice')!=='0'}catch(e){}
+  let pendingSay=null;
+  const activated=()=>navigator.userActivation?navigator.userActivation.hasBeenActive:true;
+  window.voiceEnabled=()=>voiceOn;
+  window.updateVoiceUI=()=>{
+    const s=document.getElementById('speak'),m=document.getElementById('g-mute');
+    if(s)s.textContent=voiceOn?'🔊 語音：開':'🔇 語音：關';
+    if(m){m.textContent=voiceOn?'🔊':'🔇';m.title=voiceOn?'關閉語音':'開啟語音'}
   };
-  window.showSplash=(withVoice)=>{splash.classList.remove('hide');spoken=false;if(withVoice)speak()};
+  window.setVoice=on=>{voiceOn=!!on;try{localStorage.setItem('gotrip_voice',voiceOn?'1':'0')}catch(e){}
+    if(!voiceOn)window.avatarStop();window.updateVoiceUI()};
+  window.avatarSay=function(text,lang,onState,replay){
+    if(!('speechSynthesis' in window)||!voiceOn)return false;
+    const id=++spkId;speechSynthesis.cancel();pendingSay=null;
+    const again={text,lang,onState,replay};
+    if(!activated()){pendingSay=again;return true} // 尚未有使用者操作：排隊等第一次操作
+    const st=b=>{if(id!==spkId)return;emitSpeaking(b);onState&&onState(b)};
+    voicesReady().then(()=>{
+      if(id!==spkId)return; // 等待期間已被新的語音取代
+      const v=pickVoice(lang),chunks=chunkText(text,lang.toLowerCase().startsWith('zh')?70:150);
+      if(v)console.info('語音：',v.name,v.lang);
+      chunks.forEach((c,i)=>{
+        const u=new SpeechSynthesisUtterance(c);u.lang=lang;u.rate=0.95;if(v)u.voice=v;
+        if(i===0)u.onstart=()=>st(true);
+        if(i===chunks.length-1)u.onend=()=>st(false);
+        u.onerror=e=>{st(false);if(e&&e.error==='not-allowed'&&id===spkId)pendingSay=again}; // 被瀏覽器擋下：等下次操作補播
+        speechSynthesis.speak(u);
+      });
+    });
+    return true;
+  };
+  window.avatarStop=function(){spkId++;pendingSay=null;try{speechSynthesis.cancel()}catch(e){}emitSpeaking(false)};
+  // 第一次使用者操作時，補播被擋下的語音
+  ['pointerup','mouseup','touchend','keydown','click'].forEach(ev=>document.addEventListener(ev,()=>{
+    if(!pendingSay)return;const p=pendingSay;pendingSay=null;
+    if(p.replay)p.replay();else window.avatarSay(p.text,p.lang,p.onState);
+  },true));
+  function speak(restart){
+    if(restart||!bubble.classList.contains('typing'))startTyping();
+    avatarSay(TEXT,'zh-TW',b=>{if(b){spoken=true;clerk.classList.add('talking')}else clerk.classList.remove('talking')},()=>speak(true));
+  }
+  // [開門鈕] 點擊開門即為使用者操作，瀏覽器允許發聲：開門後才開始打字與語音
+  const door=document.getElementById('door'),doorbtn=document.getElementById('doorbtn');
+  doorbtn.onclick=()=>{
+    doorbtn.disabled=true;door.classList.add('open');
+    speak(true); // 在點擊事件內直接呼叫，語音不會被擋
+    setTimeout(()=>door.remove(),1000);
+  };
+  setTimeout(()=>doorbtn.focus(),0);
+  document.getElementById('speak').onclick=()=>{window.setVoice(!voiceOn);if(voiceOn)speak(true)}; // 語音開關
+  window.updateVoiceUI();
+  document.getElementById('mapbtn').onclick=()=>{
+    window.avatarStop();clerk.classList.remove('talking');
+    splash.classList.add('hide');
+    window.onEnterTravel&&window.onEnterTravel(); // 進入旅行畫面：服務人員出現
+  };
+  window.showSplash=(withVoice)=>{window.guideClose&&window.guideClose();splash.classList.remove('hide');spoken=false;if(withVoice)speak(true)};
 })();
 </script>
-<header style="display:flex;justify-content:space-between;align-items:center"><span>🌍 3D 地球模擬飛行與街景工具</span><button id="home" onclick="showSplash()">🏠 回到櫃檯</button></header>
+<!-- ===== [VRM 新增 4/5] VRM 櫃檯人物（AvatarSample_B）開始 ===== -->
+<script type="module">
+window.__vrmStarted=true;
+// 模型來源（依序嘗試）。AvatarSample_B 為 VRoid Studio 官方範例，使用前請確認其使用條件：
+// https://vroid.pixiv.help/hc/en-us/articles/4402394424089
+const VRM_URLS=[
+  'https://raw.githubusercontent.com/madjin/vrm-samples/master/vroid/stable/AvatarSample_B.vrm',
+  'https://cdn.jsdelivr.net/gh/madjin/vrm-samples@master/vroid/stable/AvatarSample_B.vrm'
+];
+const CACHE_NAME='gotrip-vrm-v1',STALL_MS=15000; // 超過 15 秒沒有任何新資料，視為網路讀不到
+const clerk=document.getElementById('clerk'),splash=document.getElementById('splash'),bubble=document.getElementById('bubble');
+const ui=(t,pct,st)=>{const e=clerk.querySelector('.vrm-load');if(!e)return;
+  if(t!=null)e.querySelector('.lt').textContent=t;
+  if(pct!=null)e.querySelector('.bar i').style.width=pct+'%';
+  if(st!=null)e.querySelector('.ls').textContent=st};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// 下載（含進度、停滯偵測、Cache Storage 快取，第二次開啟不必重抓約 15MB）
+async function fetchBuf(url){
+  try{const c=await caches.open(CACHE_NAME),hit=await c.match(url);if(hit)return await hit.arrayBuffer()}catch(e){}
+  const ctl=new AbortController();let last=Date.now();
+  const timer=setInterval(()=>{if(Date.now()-last>STALL_MS)ctl.abort()},1000);
+  try{
+    const res=await fetch(url,{signal:ctl.signal});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!res.body)return await res.arrayBuffer();
+    const total=+res.headers.get('content-length')||0,rd=res.body.getReader(),chunks=[];let got=0;
+    for(;;){
+      const {done,value}=await rd.read();if(done)break;
+      chunks.push(value);got+=value.length;last=Date.now();
+      ui(`⏳ 載入人物 ${total?Math.round(got/total*100)+'%':(got/1048576).toFixed(1)+' MB'}`,total?got/total*100:null);
+    }
+    if(total&&got!==total)throw new Error('下載不完整');
+    const buf=new Uint8Array(got);let o=0;chunks.forEach(c=>{buf.set(c,o);o+=c.length});
+    try{(await caches.open(CACHE_NAME)).put(url,new Response(buf.buffer,{headers:{'content-type':'application/octet-stream'}}))}catch(e){}
+    return buf.buffer;
+  }finally{clearInterval(timer)}
+}
+
+(async()=>{
+  try{
+    const [THREE,{GLTFLoader},{VRMLoaderPlugin,VRMUtils}]=await Promise.all([
+      import('three'),import('three/addons/loaders/GLTFLoader.js'),import('@pixiv/three-vrm')]);
+    let buf=null;
+    for(let round=0;round<2&&!buf;round++){          // 每個來源最多嘗試 2 輪，全部失敗才算確認載不到
+      for(let i=0;i<VRM_URLS.length&&!buf;i++){
+        ui('⏳ 載入人物中…',0,`來源 ${i+1}/${VRM_URLS.length}${round?'（重試）':''}`);
+        try{buf=await fetchBuf(VRM_URLS[i])}
+        catch(e){console.warn('VRM 載入失敗：',VRM_URLS[i],e);ui('⚠️ 連線失敗，嘗試其他來源…',0);await sleep(900)}
+      }
+    }
+    if(!buf)throw new Error('所有 VRM 來源皆無法讀取');
+    ui('⏳ 準備人物中…',100,'解析模型');
+    const loader=new GLTFLoader();loader.register(p=>new VRMLoaderPlugin(p));
+    const gltf=await loader.parseAsync(buf,''),vrm=gltf.userData.vrm;
+    if(!vrm)throw new Error('不是有效的 VRM 檔案');
+    VRMUtils.rotateVRM0(vrm); // VRM 0.x 預設朝向 -Z，轉為面向鏡頭
+    vrm.scene.traverse(o=>{o.frustumCulled=false});
+    const h=vrm.humanoid,N=n=>h.getNormalizedBoneNode(n);
+
+    // 自然站姿：把 T-pose 的雙臂放下（若方向相反，自動偵測並翻轉）
+    const worldY=n=>new THREE.Vector3().setFromMatrixPosition(h.getRawBoneNode(n).matrixWorld).y;
+    const armBase={};
+    [['left',-1],['right',1]].forEach(([side,s])=>{
+      const b=N(side+'UpperArm');if(!b)return;
+      b.rotation.z=s*1.2;h.update();vrm.scene.updateMatrixWorld(true);
+      if(!(worldY(side+'Hand')<worldY(side+'UpperArm'))){b.rotation.z=-s*1.2;h.update();vrm.scene.updateMatrixWorld(true)}
+      armBase[side]=b.rotation.z;
+    });
+
+    // 場景、燈光、相機
+    const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    const scene=new THREE.Scene();scene.add(vrm.scene);
+    const light=new THREE.DirectionalLight(0xffffff,Math.PI);light.position.set(0.6,1,2).normalize();scene.add(light);
+    const camera=new THREE.PerspectiveCamera(28,1,0.1,20);
+    vrm.scene.updateMatrixWorld(true);
+    const box=new THREE.Box3().setFromObject(vrm.scene),hipsY=worldY('hips');
+    const FR={full:{b:box.min.y-0.02,t:box.max.y+0.05},bust:{b:hipsY-0.05,t:box.max.y+0.05}}; // full=全身；bust=腰部以上（手機導覽員）
+    let host=null,frame='';
+    function fit(){
+      if(!host)return;
+      const f=FR[frame]||FR.full,cy=(f.b+f.t)/2,span=f.t-f.b;
+      const w=host.clientWidth||200,hh=host.clientHeight||300,asp=w/hh,t=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+      const dist=Math.max((span/2)/t,0.31/(t*asp)); // 同時容納身高與雙臂寬度
+      renderer.setSize(w,hh,false);camera.aspect=asp;camera.updateProjectionMatrix();
+      camera.position.set(0,cy,dist);camera.lookAt(0,cy,0);
+    }
+    const ro=new ResizeObserver(fit);
+    // 人物可在「開頭畫面」與「手機導覽員」之間搬移：同一個模型、同一個畫布，不重複載入
+    function applyHost(){
+      const w=window.__avatarWant||{el:clerk,frame:'full'};
+      if(w.el===host&&w.frame===frame&&renderer.domElement.parentNode===host)return;
+      host=w.el;frame=w.frame;host.textContent='';host.appendChild(renderer.domElement);
+      ro.disconnect();ro.observe(host);fit();
+    }
+    document.addEventListener('avatar-mount',applyHost);
+    applyHost();window.__vrmReady=true;
+
+    // 嘴型：A I U E O（對應 VRM 表情 aa/ih/ou/ee/oh）
+    const VOW=['aa','ih','ou','ee','oh'],AMP=[0.9,0.6,0.7,0.7,0.8],SEQ=[0,3,1,4,2];
+    const PAUSE=/[\s，。、；：！？,.!?;:…「」『』（）()\-—]/;
+    const vowelOf=ch=>{const m={a:0,i:1,u:2,e:3,o:4},l=ch.toLowerCase();return l in m?m[l]:ch.codePointAt(0)%5}; // 英文字母依母音；中文字無拼音資料，以字碼近似分配
+    const now=()=>performance.now()/1000;
+    let speaking=false,vow=0,lastChar=-9,interval=0.16;
+    const mouthW={aa:0,ih:0,ou:0,ee:0,oh:0};
+    document.addEventListener('avatar-speaking',ev=>{speaking=!!ev.detail});
+    document.addEventListener('typechar',ev=>{
+      const el=ev.target;if(!el.closest||!el.closest('[data-avatar-text]'))return; // 只回應人物的說話文字
+      const ch=ev.detail||'';if(PAUSE.test(ch)){lastChar=-9;return}
+      const tn=now(),d=tn-lastChar;
+      if(d>0.03&&d<0.5)interval=Math.min(0.3,Math.max(0.06,interval*0.8+d*0.2)); // 依實際打字速度調整節奏
+      vow=vowelOf(ch);lastChar=tn;
+    });
+
+    // 動畫：呼吸、眨眼、微笑、母音嘴型（無上下擺動）
+    const ex=vrm.expressionManager;
+    let blinkAt=2,t=0,prev=performance.now(); // 自行計時（THREE.Clock 在新版已棄用）
+    (function tick(){
+      requestAnimationFrame(tick);
+      const shown=!document.hidden&&host&&(host!==clerk||!splash.classList.contains('hide'))&&host.getClientRects().length>0;
+      if(!shown){prev=performance.now();return} // 畫面看不到時不繪製，省效能
+      const nowMs=performance.now(),dt=Math.min((nowMs-prev)/1000,0.1);prev=nowMs;t+=dt;
+      const chest=N('chest')||N('spine');if(chest)chest.rotation.x=Math.sin(t*1.6)*0.012;
+      const head=N('head');if(head)head.rotation.y=Math.sin(t*0.5)*0.08; // 僅左右微轉
+      ['left','right'].forEach(s=>{const b=N(s+'UpperArm');if(b&&armBase[s]!==undefined)b.rotation.z=armBase[s]+Math.sin(t*1.2)*0.012});
+      if(ex){
+        const bp=t-blinkAt;let blink=0;
+        if(bp>0&&bp<0.18)blink=1-Math.abs(bp-0.09)/0.09;else if(bp>=0.18)blinkAt=t+2+Math.random()*3;
+        ex.setValue('blink',blink);
+        const tn=now(),since=tn-lastChar,tgt={aa:0,ih:0,ou:0,ee:0,oh:0};
+        if(since<interval*1.8){ // 隨文字節奏：每出現一個字，開合一次對應母音
+          tgt[VOW[vow]]=AMP[vow]*Math.sin(Math.PI*Math.min(1,since/interval));
+        }else if(speaking){ // 文字已打完但語音還在念：以固定節奏輪流發出五個母音
+          const k=Math.floor(tn/0.18),ph=(tn%0.18)/0.18,i=SEQ[k%SEQ.length];
+          tgt[VOW[i]]=AMP[i]*Math.sin(Math.PI*ph)*(0.75+0.25*Math.sin(tn*2.3));
+        }
+        VOW.forEach(v=>{mouthW[v]+=(tgt[v]-mouthW[v])*Math.min(1,dt*30);ex.setValue(v,mouthW[v])});
+        ex.setValue('happy',0.25);
+      }
+      vrm.update(dt);renderer.render(scene,camera);
+    })();
+  }catch(err){
+    console.warn('VRM 人物無法載入，改用 EMOJI：',err);
+    window.__vrmFailed=true;window.__vrmReady=false;
+    const e=clerk.querySelector('.vrm-load');
+    if(e){e.classList.add('fail');ui('❌ 無法載入人物',null,'已確認網路讀不到，改用替代圖示');e.querySelector('.bar i').style.width='0'}
+    setTimeout(()=>window.clerkEmoji&&window.clerkEmoji(),1800);
+  }
+})();
+</script>
+<!-- ===== [VRM 新增 4/5] 結束 ===== -->
+<header style="display:flex;justify-content:space-between;align-items:center"><span>🌍 3D 地球模擬飛行與街景工具</span><span><button id="svc" type="button" style="background:#334155;padding:6px 12px;font-size:.9rem;margin-right:6px">🧑‍💼 服務人員</button><button id="home" onclick="showSplash()">🏠 回到櫃檯</button></span></header>
 <div class="container">
   <div id="map"><div id="hint">📍 請點擊地球選擇「出發地」</div><div id="globe"></div><div id="err"></div><div style="position:absolute;right:8px;bottom:6px;z-index:5;font-size:11px;color:#94a3b8">圖資：© Esri / © OpenStreetMap contributors / 內政部國土測繪中心</div></div>
   <div id="sidebar">
@@ -182,11 +438,23 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
       <div class="row"><button class="small" id="b-btn" style="flex:1">📍 加入地圖</button><button class="small" id="b-clr">🗑️ 清除全部</button></div>
       <div id="b-msg"></div><div id="b-list"></div></div>
     <!-- ===== [批次景點 新增 2/5] 結束 ===== -->
+    <!-- ===== [景點介紹 新增 1/4] 介紹卡片 開始 ===== -->
+    <div class="card" id="intro-card" style="display:none;border-left:4px solid #a78bfa">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>📖 景點介紹</b><span id="intro-x" style="cursor:pointer;color:#94a3b8" title="關閉">✕</span></div>
+      <div id="intro" style="margin-top:8px"></div></div>
+    <!-- ===== [景點介紹 新增 1/4] 結束 ===== -->
     <div class="card"><b>🏞️ 附近景點</b><div id="spots" style="margin-top:8px;line-height:1.9;color:#94a3b8">飛抵目的地後顯示</div></div>
     <div class="card"><div id="info"><b>航程資訊：</b>請設定地點</div>
       <a id="sv" target="gsv" style="display:none;margin-top:12px;text-align:center;background:#10b981;color:#fff;padding:10px;border-radius:6px;text-decoration:none;font-weight:bold">🌐 開啟目的地 Google 街景</a></div>
   </div>
 </div>
+<!-- ===== [導覽員 新增 2/4] 手機版導覽員（人物 + 對話泡泡）開始 ===== -->
+<div id="guide" aria-live="polite">
+  <div class="g-av" id="guide-av" role="img" aria-label="導覽員"></div>
+  <div class="g-bub"><div class="g-top"><b>🧑‍💼 服務人員</b><span><button id="g-replay" type="button" title="重新播放">🔁</button><button id="g-mute" type="button" title="語音開關">🔊</button><button id="g-x" type="button" title="關閉">✕</button></span></div>
+    <div class="g-txt" id="g-txt" data-avatar-text></div></div>
+</div>
+<!-- ===== [導覽員 新增 2/4] 結束 ===== -->
 <script>
 const $=id=>document.getElementById(id), hint=$('hint');
 Object.defineProperty(hint,'textContent',{configurable:true,
@@ -320,8 +588,93 @@ async function loadSpots(p){
     a.textContent='📍 '+x.name;a.style.cssText='cursor:pointer;color:#fbbf24';
     a.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
     g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
-    row.append(a,g);box.appendChild(row)});
+    row.append(a,introBtn(x),g);box.appendChild(row)}); // [景點介紹 新增 2/4] 加入介紹按鈕
 }
+
+// ===== [景點介紹 新增 3/4] 景點介紹（資料來源：維基百科）開始 =====
+const INTRO_CACHE={};let introTok=0;
+// 回傳：物件＝找到；null＝查無；undefined＝網路/服務錯誤（不快取，可重試）
+async function fetchIntro(x){
+  const key=x.name+'|'+x.lat+'|'+x.lng;
+  if(INTRO_CACHE[key]!==undefined)return INTRO_CACHE[key];
+  let netFail=false,res=null;
+  for(const lang of ['zh','en']){
+    try{
+      const u=`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&generator=search&gsrsearch=${encodeURIComponent(x.name)}&gsrlimit=3&prop=extracts|pageimages|coordinates|info&exintro=1&explaintext=1&exsentences=4&piprop=thumbnail&pithumbsize=400&inprop=url&colimit=max${lang==='zh'?'&variant=zh-tw':''}`;
+      const d=await (await fetch(u)).json();
+      const pages=Object.values((d.query&&d.query.pages)||{}).filter(p=>p.extract).sort((a,b)=>a.index-b.index);
+      const near=pages.find(p=>{const c=p.coordinates&&p.coordinates[0];return c&&dist(x.lat,x.lng,c.lat,c.lon)<=50}); // 座標吻合者優先
+      const noCoord=pages.find(p=>!p.coordinates); // 其次：無座標資料的文章（請使用者核對標題）
+      const p=near||noCoord;
+      if(p){res={title:p.title,extract:p.extract.trim(),thumb:p.thumbnail&&p.thumbnail.source,url:p.fullurl,lang,verified:!!near};break}
+    }catch(e){netFail=true}
+  }
+  if(!res&&netFail)return undefined;
+  INTRO_CACHE[key]=res;return res;
+}
+async function showIntro(x){
+  const card=$('intro-card'),box=$('intro'),tok=++introTok;
+  card.style.display='block';box.textContent='⏳ 讀取「'+x.name+'」介紹...';
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(!PLANE)world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
+  guideShow('⏳ 正在查詢「'+x.name+'」的介紹…'); // 桌機、手機都由服務人員說明
+  const r=await fetchIntro(x);if(tok!==introTok)return;
+  guideSay(r?r.extract:(r===null?`找不到「${x.name}」的介紹資料。`:'網路或服務暫時無法使用，請稍後再試。'),r&&r.lang==='en'?'en-US':'zh-TW');
+  box.textContent='';
+  const mk=(tag,txt,css)=>{const e=document.createElement(tag);if(txt)e.textContent=txt;if(css)e.style.cssText=css;return e};
+  box.appendChild(mk('div','📍 '+x.name,'font-weight:bold;color:#fde68a;font-size:1.05rem'));
+  if(r&&r.thumb){const im=mk('img','', 'max-width:100%;border-radius:6px;margin-top:8px;display:block');im.src=r.thumb;im.alt=r.title;im.loading='lazy';box.appendChild(im)}
+  if(r){
+    box.appendChild(mk('div',r.extract,'margin-top:8px;line-height:1.7;color:#e2e8f0'));
+    const src=mk('div','','margin-top:8px;font-size:.78rem;color:#94a3b8');
+    const a=mk('a','維基百科：'+r.title+(r.lang==='en'?'（英文）':''),'color:#38bdf8');a.href=r.url;a.target='_blank';a.rel='noopener';
+    src.append('資料來源：',a);box.appendChild(src);
+    if(!r.verified)box.appendChild(mk('div','⚠️ 此文章未提供座標，無法自動確認是否為同一地點，請核對標題。','margin-top:4px;font-size:.78rem;color:#fbbf24'));
+  }else box.appendChild(mk('div',r===null?'找不到這個景點的維基百科介紹。':'網路或服務暫時無法使用，請稍後再按一次「📖」。','margin-top:8px;color:#fca5a5'));
+  const links=mk('div','','margin-top:8px;display:flex;gap:12px;font-size:.85rem');
+  [['🗺️ Google 地圖',`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`],['🌐 街景',svUrl(x.lat,x.lng)],['🔍 搜尋更多',`https://www.google.com/search?q=${encodeURIComponent(x.name)}`]].forEach(([t,h])=>{
+    const a=mk('a',t,'color:#34d399;text-decoration:none');a.href=h;a.target='_blank';a.rel='noopener';links.appendChild(a)});
+  box.appendChild(links);
+}
+// ===== [導覽員 新增 3/4] 手機版：由人物以相同方式（泡泡打字 + 語音 + 母音嘴型）說明介紹文 開始 =====
+const isMobile=()=>matchMedia('(max-width:768px)').matches; // 與 CSS 的手機版斷點一致
+let guideLast=null;
+function guideShow(msg){ // 顯示導覽員（人物搬到導覽員位置），先顯示一行提示
+  const g=$('guide'),slot=$('guide-av'),t=$('g-txt');
+  g.classList.add('on');
+  window.__avatarWant={el:slot,frame:'bust'};
+  if(window.__vrmReady)document.dispatchEvent(new Event('avatar-mount'));
+  else if(!slot.querySelector('canvas'))slot.textContent=window.__vrmFailed?'👩‍💼':'⏳'; // 載入失敗用 EMOJI；載入中先顯示等待
+  window.avatarStop&&window.avatarStop();clearInterval(t._tw);t.textContent=msg;
+}
+function guideSay(text,lang){
+  const t=$('g-txt'),g=$('guide');
+  window.avatarStop&&window.avatarStop();clearInterval(t._tw);
+  guideLast={text,lang};
+  typeInto(t,text,lang==='en-US'?60:170); // 打字速度接近語音語速
+  window.avatarSay&&window.avatarSay(text,lang,b=>g.classList.toggle('talking',b),()=>guideSay(text,lang));
+}
+function guideClose(){
+  const g=$('guide');if(!g.classList.contains('on'))return;
+  window.avatarStop&&window.avatarStop();clearInterval($('g-txt')._tw);
+  g.classList.remove('on','talking');
+  window.__avatarWant=null; // 人物回到開頭畫面的位置
+  if(window.__vrmReady)document.dispatchEvent(new Event('avatar-mount'));
+}
+window.guideClose=guideClose;
+$('g-x').onclick=guideClose;
+$('g-replay').onclick=()=>{if(guideLast)guideSay(guideLast.text,guideLast.lang)};
+$('g-mute').onclick=()=>{window.setVoice(!window.voiceEnabled());if(window.voiceEnabled()&&guideLast)guideSay(guideLast.text,guideLast.lang)};
+window.updateVoiceUI();
+// 進入旅行畫面：服務人員出場並以語音說明；之後點「📖介紹」會由她念出簡介
+const WELCOME='歡迎來到旅行畫面，我是您的服務人員。請點擊地球選擇出發地，再選目的地，按下開始飛行。點選景點旁的「介紹」，我會為您念出簡介。';
+window.onEnterTravel=()=>{guideShow('');guideSay(WELCOME,'zh-TW')};
+$('svc').onclick=()=>window.onEnterTravel();
+$('g-txt').addEventListener('typechar',e=>{e.currentTarget.scrollTop=e.currentTarget.scrollHeight});
+// ===== [導覽員 新增 3/4] 結束 =====
+function introBtn(x){const b=document.createElement('span');b.textContent=' 📖介紹';b.style.cssText='cursor:pointer;color:#a78bfa;font-size:.8rem';b.onclick=()=>showIntro(x);return b}
+$('intro-x').onclick=()=>{introTok++;$('intro-card').style.display='none';guideClose()};
+// ===== [景點介紹 新增 3/4] 結束 =====
 
 // ===== [批次景點 新增 4/5] 批次輸入景點名稱 開始 =====
 const CKEY='gotrip_custom_spots',BATCH_MAX=50;
@@ -366,7 +719,7 @@ function renderCustomList(){
     g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
     d.textContent='✕';d.className='del';d.title='刪除';
     d.onclick=()=>{CUSTOM.splice(i,1);saveCustom();drawMarkers();renderCustomList()};
-    row.append(a,g,d);box.appendChild(row);
+    row.append(a,introBtn(x),g,d);box.appendChild(row); // [景點介紹 新增 2/4] 加入介紹按鈕
   });
 }
 $('b-btn').onclick=async()=>{
