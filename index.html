@@ -40,6 +40,16 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 .mk.spot .dot,.mk.spot .lbl{pointer-events:auto;cursor:pointer}
 .mk.spot:hover .lbl{display:block!important;color:#fff}
 #globe.far .mk.spot .lbl{display:none}
+/* ===== [批次景點 新增 1/5] 樣式 開始 ===== */
+.mk.cspot .lbl{color:#c4b5fd;font-size:12px}
+.mk.cspot .dot,.mk.cspot .lbl{pointer-events:auto;cursor:pointer}
+.mk.cspot:hover .lbl{display:block!important;color:#fff}
+#globe.far .mk.cspot .lbl{display:none}
+#b-in{width:100%;margin-top:6px;padding:8px 10px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:6px;outline:none;font-family:inherit;resize:vertical;line-height:1.6}
+#b-msg{margin-top:8px;color:#94a3b8;word-break:break-word}
+#b-list{margin-top:8px;line-height:1.9}
+#b-list .del{cursor:pointer;color:#f87171;margin-left:6px}
+/* ===== [批次景點 新增 1/5] 結束 ===== */
 @media(max-width:768px){.container{flex-direction:column}#sidebar{width:100%;height:40vh;border-left:0}}
 
 /* 開頭畫面：厚片旅行社櫃檯 */
@@ -166,6 +176,12 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
     <div><label>🗺️ 底圖</label><div class="row"><select id="basemap" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:6px"><option value="esriStreet">Esri 街道圖</option><option value="nlsc">台灣通用電子地圖（中文，僅台灣範圍）</option><option value="esriSat">Esri 衛星影像</option><option value="osm">OpenStreetMap（localhost 才可能可用）</option></select></div></div>
     <button id="end-trip" style="display:none;padding:12px;background:#b45309;font-weight:bold;font-size:1rem">🔄 結束旅程（重新選擇起點）</button>
     <button class="primary" id="fly">🚀 開始 3D 模擬飛行</button>
+    <!-- ===== [批次景點 新增 2/5] 介面 開始 ===== -->
+    <div class="card"><b>📝 批次新增景點</b>
+      <textarea id="b-in" rows="5" placeholder="每行一個景點，例如：&#10;淺草寺&#10;東京晴空塔&#10;上野動物園&#10;（也可用 、 ， ； 分隔）"></textarea>
+      <div class="row"><button class="small" id="b-btn" style="flex:1">📍 加入地圖</button><button class="small" id="b-clr">🗑️ 清除全部</button></div>
+      <div id="b-msg"></div><div id="b-list"></div></div>
+    <!-- ===== [批次景點 新增 2/5] 結束 ===== -->
     <div class="card"><b>🏞️ 附近景點</b><div id="spots" style="margin-top:8px;line-height:1.9;color:#94a3b8">飛抵目的地後顯示</div></div>
     <div class="card"><div id="info"><b>航程資訊：</b>請設定地點</div>
       <a id="sv" target="gsv" style="display:none;margin-top:12px;text-align:center;background:#10b981;color:#fff;padding:10px;border-radius:6px;text-decoration:none;font-weight:bold">🌐 開啟目的地 Google 街景</a></div>
@@ -205,7 +221,7 @@ const world=Globe()($('globe'))
       q.style.transform=`rotate(${(d.heading||0)-PLANE_BASE}deg)`;
       d.rot=q;e.appendChild(q);return e}
     e.className='mk '+d.type;
-    if(d.type==='spot')e.onclick=()=>window.open(svUrl(d.lat,d.lng),'gsv');
+    if(d.type==='spot'||d.type==='cspot')e.onclick=()=>window.open(svUrl(d.lat,d.lng),'gsv'); // [批次景點 新增 3/5] 加入 cspot
     const dot=document.createElement('span');dot.className='dot';dot.style.background=d.color;
     const t=document.createElement('span');t.className='lbl';t.textContent=d.text;
     e.append(dot,t);return e});
@@ -233,7 +249,7 @@ const arcAlt=()=>Math.min(Math.max(dist(S.lat,S.lng,E.lat,E.lng)/6371*0.15,0.01)
 async function rev(lat,lng){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&accept-language=zh-TW&lat=${lat}&lon=${lng}`);const d=await r.json();if(d.display_name)return d.display_name.split(',')[0]}catch(e){}return `${lat}, ${lng}`}
 async function geo(q){try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&accept-language=zh-TW&q=${encodeURIComponent(q)}`);const d=await r.json();if(d[0])return{lat:+d[0].lat,lng:+d[0].lon,name:d[0].display_name.split(',')[0]}}catch(e){}return null}
 
-let SPOTS=[],MK=[],PLANE=null,arrived=false;
+let SPOTS=[],MK=[],PLANE=null,arrived=false,CUSTOM=[]; // [批次景點 新增 3/5] CUSTOM：使用者批次輸入的景點
 const svUrl=(lat,lng)=>`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 const PLANE_BASE=45; // ✈️ 字型預設機頭朝右上（約 45°），若你的裝置字型不同可調整此值
 const bearing=(a,b)=>{const r=Math.PI/180,f1=a.lat*r,f2=b.lat*r,dl=(b.lng-a.lng)*r;
@@ -246,6 +262,7 @@ function drawMarkers(){
     if(E)MK.push({type:'end',lat:E.lat,lng:E.lng,alt:0,color:'#22c55e',text:'🏁 '+E.name});
   }
   SPOTS.forEach(p=>MK.push({type:'spot',lat:p.lat,lng:p.lng,alt:0,color:'#f59e0b',text:p.name}));
+  CUSTOM.forEach(p=>MK.push({type:'cspot',lat:p.lat,lng:p.lng,alt:0,color:'#8b5cf6',text:p.name})); // [批次景點 新增 3/5]
   world.htmlElementsData(allMarks());
 }
 function render(){
@@ -259,7 +276,7 @@ function render(){
     $('sv').href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${E.lat},${E.lng}`;$('sv').style.display='block';
   }else world.arcsData([]);
 }
-function reset(){clearInterval(timer);PLANE=null;arrived=false;MK=[];world.htmlElementsData([]);S=E=null;SPOTS=[];$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
+function reset(){clearInterval(timer);PLANE=null;arrived=false;S=E=null;SPOTS=[];drawMarkers();/* [批次景點 新增 3/5] 改用 drawMarkers 以保留自訂景點 */$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
 
 world.onGlobeClick(async({lat,lng})=>{
   lat=+lat.toFixed(4);lng=+lng.toFixed(4);
@@ -305,6 +322,83 @@ async function loadSpots(p){
     g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
     row.append(a,g);box.appendChild(row)});
 }
+
+// ===== [批次景點 新增 4/5] 批次輸入景點名稱 開始 =====
+const CKEY='gotrip_custom_spots',BATCH_MAX=50;
+let batchBusy=false;
+try{CUSTOM=JSON.parse(localStorage.getItem(CKEY)||'[]').filter(x=>x&&x.name&&isFinite(x.lat)&&isFinite(x.lng))}catch(e){CUSTOM=[]}
+const saveCustom=()=>{try{localStorage.setItem(CKEY,JSON.stringify(CUSTOM))}catch(e){}};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// 解析：每行一個；同行可用 、 ， ； ; 分隔；自動去除編號/項目符號、空白行與重複項
+function parseBatch(txt){
+  const seen=new Set(),out=[];
+  txt.split(/[\r\n]+/).forEach(line=>{
+    line.replace(/^\s*(?:[-*•・]+|\(?\d+[.)、:：．]|[①-⑳])\s*/,'').split(/[;；、，]+/).forEach(s=>{
+      s=s.trim();const k=s.toLowerCase();
+      if(s&&!seen.has(k)){seen.add(k);out.push(s)}
+    });
+  });
+  return out;
+}
+// 查詢單一景點；若已設定目的地，以目的地周邊（±2°）作為搜尋偏好範圍
+async function geoSpot(q){
+  let url=`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=zh-TW&q=${encodeURIComponent(q)}`;
+  if(E){const d=2;url+=`&viewbox=${E.lng-d},${E.lat+d},${E.lng+d},${E.lat-d}`}
+  try{const d=await (await fetch(url)).json();if(d[0])return{lat:+(+d[0].lat).toFixed(5),lng:+(+d[0].lon).toFixed(5),name:q}}catch(e){}
+  return null;
+}
+// 將鏡頭移到一組景點的中心，並依分散程度調整高度
+function viewSpots(list){
+  if(!list.length||PLANE)return;
+  if(list.length===1)return world.pointOfView({lat:list[0].lat,lng:list[0].lng,altitude:0.04},1200);
+  const r=Math.PI/180;let x=0,y=0,z=0;
+  list.forEach(p=>{x+=Math.cos(p.lat*r)*Math.cos(p.lng*r);y+=Math.cos(p.lat*r)*Math.sin(p.lng*r);z+=Math.sin(p.lat*r)});
+  const c={lat:Math.atan2(z,Math.hypot(x,y))/r,lng:Math.atan2(y,x)/r};
+  const far=Math.max(...list.map(p=>dist(c.lat,c.lng,p.lat,p.lng)));
+  world.pointOfView({lat:c.lat,lng:c.lng,altitude:Math.min(2.2,Math.max(0.05,far/6371*2.2))},1200);
+}
+function renderCustomList(){
+  const box=$('b-list');box.textContent='';
+  CUSTOM.forEach((x,i)=>{
+    const row=document.createElement('div'),a=document.createElement('span'),g=document.createElement('a'),d=document.createElement('span');
+    a.textContent='📌 '+x.name;a.style.cssText='cursor:pointer;color:#c4b5fd';
+    a.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
+    g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
+    d.textContent='✕';d.className='del';d.title='刪除';
+    d.onclick=()=>{CUSTOM.splice(i,1);saveCustom();drawMarkers();renderCustomList()};
+    row.append(a,g,d);box.appendChild(row);
+  });
+}
+$('b-btn').onclick=async()=>{
+  if(batchBusy)return;
+  const msg=$('b-msg'),all=parseBatch($('b-in').value),names=all.slice(0,BATCH_MAX);
+  if(!names.length){msg.textContent='請先輸入景點名稱（每行一個）';return}
+  batchBusy=true;$('b-btn').disabled=true;
+  const ok=[],fail=[],dup=[],have=new Set(CUSTOM.map(x=>x.name.toLowerCase()));
+  try{
+    for(let i=0;i<names.length;i++){
+      const n=names[i];
+      if(have.has(n.toLowerCase())){dup.push(n);continue}
+      msg.textContent=`⏳ 查詢中 ${i+1}/${names.length}：${n}`;
+      const r=await geoSpot(n);
+      if(r){CUSTOM.push(r);have.add(n.toLowerCase());ok.push(r);drawMarkers();renderCustomList()}else fail.push(n);
+      if(i<names.length-1)await sleep(1100); // Nominatim 使用規範：每秒最多 1 次請求
+    }
+  }finally{batchBusy=false;$('b-btn').disabled=false}
+  saveCustom();drawMarkers();renderCustomList();viewSpots(ok);
+  const parts=[`✅ 成功加入 ${ok.length} 個`];
+  if(dup.length)parts.push(`已存在略過 ${dup.length} 個`);
+  if(fail.length)parts.push(`⚠️ 找不到 ${fail.length} 個：${fail.join('、')}（已保留在輸入框，可修改後重試）`);
+  if(all.length>BATCH_MAX)parts.push(`一次最多處理 ${BATCH_MAX} 個，其餘 ${all.length-BATCH_MAX} 個請分批輸入`);
+  msg.textContent=parts.join('；');
+  $('b-in').value=fail.join('\n');
+};
+$('b-clr').onclick=()=>{
+  if(!CUSTOM.length||!confirm('確定要清除全部自訂景點嗎？'))return;
+  CUSTOM=[];saveCustom();drawMarkers();renderCustomList();$('b-msg').textContent='已清除全部自訂景點';
+};
+renderCustomList();if(CUSTOM.length)drawMarkers(); // 載入上次儲存的自訂景點
+// ===== [批次景點 新增 4/5] 結束 =====
 
 $('fly').onclick=()=>{
   if(!S||!E)return alert('請先選擇起點與目的地！');
