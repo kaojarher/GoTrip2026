@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>3D 地球模擬飛行與街景工具 (globe.gl)</title>
 <!-- ===== [PWA 新增 1/4] PWA 必要標籤：manifest 連結、主題色、iOS 安裝支援 開始 ===== -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -26,7 +26,7 @@
 <script src="https://cdn.jsdelivr.net/npm/globe.gl@2/dist/globe.gl.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","STKaiti","AR PL UKai TW",serif;display:flex;flex-direction:column;height:100vh;background:#0f172a;color:#f8fafc}
+body{font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","STKaiti","AR PL UKai TW",serif;display:flex;flex-direction:column;height:100vh;height:100dvh;background:#0f172a;color:#f8fafc}
 header{background:#1e293b;color:#38bdf8;padding:12px 16px;font-size:1.2rem;font-weight:bold;border-bottom:1px solid #334155}
 .container{display:flex;flex:1;overflow:hidden}
 #map{flex:1;position:relative;min-width:0;min-height:300px}
@@ -127,6 +127,14 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 #splash .typing .caret{display:inline}
 @keyframes blink{50%{opacity:0}}
 #home{background:#334155;padding:6px 12px;font-size:.9rem}
+/* ===== [手機強化 新增 1/3] 樣式 ===== */
+header{padding-top:max(12px,env(safe-area-inset-top));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+#sidebar{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.mk.spot .dot::after,.mk.cspot .dot::after{content:"";position:absolute;inset:-14px;border-radius:50%} /* 放大觸控範圍 */
+#net{display:none;position:fixed;top:0;left:0;right:0;z-index:1200;background:#b45309;color:#fff;text-align:center;padding:6px 8px;padding-top:max(6px,env(safe-area-inset-top));font-size:.9rem}
+#wx{font-size:.88rem;color:#cbd5e1;line-height:1.6}
+@media(max-width:768px){button,.small{min-height:40px}input,select{font-size:16px} /* 避免 iOS 聚焦時自動放大 */}
+/* ===== [手機強化 新增 1/3] 結束 ===== */
 /* ===== [開門鈕 新增 1/2] 樣式 ===== */
 #door{position:fixed;inset:0;z-index:1100;overflow:hidden}
 #door .dl,#door .dr{position:absolute;top:0;bottom:0;width:50.5%;background:repeating-linear-gradient(90deg,#8a5a3b 0 38px,#7a4e32 38px 40px);transition:transform .9s cubic-bezier(.7,0,.3,1)}
@@ -154,6 +162,7 @@ button{cursor:pointer;border:none;border-radius:6px;color:#fff}
 <button id="pwa-install" type="button" aria-label="安裝厚片旅行社 App">📲 安裝 App</button>
 <div id="pwa-ios-tip"><button type="button" id="pwa-ios-close">✕</button>📲 安裝方式：點 Safari 下方的「分享」圖示，再選「加入主畫面」。</div>
 <!-- ===== [PWA 新增 3/4] 結束 ===== -->
+<div id="net" role="status">📴 目前離線：地圖、景點與簡介需要網路</div>
 <div id="door" role="dialog" aria-label="厚片旅行社入口"><div class="dl"></div><div class="dr"></div><div class="dc"><div class="dsign">🍞 厚片旅行社</div><button id="doorbtn" type="button" autofocus>🚪 開門</button><div class="dtip">點一下開門，服務人員會為您語音說明</div></div></div>
 <div id="splash">
   <div class="sign">🍞 厚片旅行社</div>
@@ -427,7 +436,7 @@ async function fetchBuf(url){
   <div id="map"><div id="hint">📍 請點擊地球選擇「出發地」</div><div id="globe"></div><div id="err"></div><div style="position:absolute;right:8px;bottom:6px;z-index:5;font-size:11px;color:#94a3b8">圖資：© Esri / © OpenStreetMap contributors / 內政部國土測繪中心</div></div>
   <div id="sidebar">
     <div class="card" style="border-left:4px solid #38bdf8">💡 第 1 下點擊選起點，第 2 下選目的地。左鍵拖曳旋轉，滾輪縮放。</div>
-    <div><label>🚩 出發地</label><div class="row"><input id="s-in" value="台北"><button class="small" id="s-btn">搜尋</button></div></div>
+    <div><label>🚩 出發地</label><div class="row"><input id="s-in" value="台北"><button class="small" id="s-btn">搜尋</button><button class="small" id="s-loc" type="button" title="用我的位置當出發地" aria-label="用我的位置當出發地">📍</button></div></div>
     <div><label>🏁 目的地</label><div class="row"><input id="e-in" value="東京"><button class="small" id="e-btn">搜尋</button></div></div>
     <div><label>🗺️ 底圖</label><div class="row"><select id="basemap" style="flex:1;padding:8px;background:#0f172a;color:#fff;border:1px solid #475569;border-radius:6px"><option value="esriStreet">Esri 街道圖</option><option value="nlsc">台灣通用電子地圖（中文，僅台灣範圍）</option><option value="esriSat">Esri 衛星影像</option><option value="osm">OpenStreetMap（localhost 才可能可用）</option></select></div></div>
     <button id="end-trip" style="display:none;padding:12px;background:#b45309;font-weight:bold;font-size:1rem">🔄 結束旅程（重新選擇起點）</button>
@@ -444,7 +453,7 @@ async function fetchBuf(url){
       <div id="intro" style="margin-top:8px"></div></div>
     <!-- ===== [景點介紹 新增 1/4] 結束 ===== -->
     <div class="card"><b>🏞️ 附近景點</b><div id="spots" style="margin-top:8px;line-height:1.9;color:#94a3b8">飛抵目的地後顯示</div></div>
-    <div class="card"><div id="info"><b>航程資訊：</b>請設定地點</div>
+    <div class="card"><div id="info"><b>航程資訊：</b>請設定地點</div><div id="wx"></div>
       <a id="sv" target="gsv" style="display:none;margin-top:12px;text-align:center;background:#10b981;color:#fff;padding:10px;border-radius:6px;text-decoration:none;font-weight:bold">🌐 開啟目的地 Google 街景</a></div>
   </div>
 </div>
@@ -457,6 +466,7 @@ async function fetchBuf(url){
 <!-- ===== [導覽員 新增 2/4] 結束 ===== -->
 <script>
 const $=id=>document.getElementById(id), hint=$('hint');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); // 外部資料（地名）顯示前先跳脫，避免 HTML 注入
 Object.defineProperty(hint,'textContent',{configurable:true,
   get(){return hint.getAttribute('data-full')||''},
   set(v){hint.setAttribute('data-full',v);typeInto(hint,v,35)}});
@@ -533,18 +543,50 @@ function drawMarkers(){
   CUSTOM.forEach(p=>MK.push({type:'cspot',lat:p.lat,lng:p.lng,alt:0,color:'#8b5cf6',text:p.name})); // [批次景點 新增 3/5]
   world.htmlElementsData(allMarks());
 }
-function render(){
+function render(){if(E)loadWeather(E);else $('wx').textContent='';
   $('end-trip').style.display=(S&&E)?'block':'none';
   arrived=false;PLANE=null;SPOTS=[];$('spots').textContent='飛抵目的地後顯示';
   drawMarkers();
   if(S&&E){
     world.arcsData([{startLat:S.lat,startLng:S.lng,endLat:E.lat,endLng:E.lng}]).arcAltitude(arcAlt());
     const m=slerp(S,E,.5),d=dist(S.lat,S.lng,E.lat,E.lng);
-    $('info').innerHTML=`<b>起點：</b>${S.name}<br><b>終點：</b>${E.name}<br><b>預估航程距離：</b>約 ${d} 公里`;
+    $('info').innerHTML=`<b>起點：</b>${esc(S.name)}<br><b>終點：</b>${esc(E.name)}<br><b>預估航程距離：</b>約 ${d} 公里`;
     $('sv').href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${E.lat},${E.lng}`;$('sv').style.display='block';
   }else world.arcsData([]);
 }
-function reset(){clearInterval(timer);PLANE=null;arrived=false;S=E=null;SPOTS=[];drawMarkers();/* [批次景點 新增 3/5] 改用 drawMarkers 以保留自訂景點 */$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
+function reset(){clearInterval(timer);PLANE=null;arrived=false;S=E=null;SPOTS=[];drawMarkers();/* [批次景點 新增 3/5] 改用 drawMarkers 以保留自訂景點 */$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('wx').textContent='';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
+
+// ===== [手機強化 新增 2/3] 天氣／定位／導航／離線提示 =====
+const WXC={0:'晴朗',1:'大致晴朗',2:'多雲',3:'陰天',45:'有霧',48:'霧凇',51:'毛毛雨',53:'毛毛雨',55:'毛毛雨',56:'凍毛毛雨',57:'凍毛毛雨',61:'小雨',63:'中雨',65:'大雨',66:'凍雨',67:'凍雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'陣雨',81:'陣雨',82:'強陣雨',85:'陣雪',86:'強陣雪',95:'雷雨',96:'雷雨夾冰雹',99:'強雷雨夾冰雹'};
+let wxTok=0;
+async function loadWeather(p){ // 資料來源：Open-Meteo（免金鑰）
+  const box=$('wx'),tok=++wxTok;box.textContent='⏳ 查詢目的地天氣…';
+  try{
+    const d=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&current=temperature_2m,apparent_temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`)).json();
+    if(tok!==wxTok)return;
+    const c=d.current,dy=d.daily,t=new Date().toLocaleTimeString('zh-TW',{timeZone:d.timezone,hour:'2-digit',minute:'2-digit',hour12:false});
+    const rain=dy.precipitation_probability_max&&dy.precipitation_probability_max[0];
+    box.textContent=`🌤️ 目的地現在 ${Math.round(c.temperature_2m)}°C（體感 ${Math.round(c.apparent_temperature)}°C），${WXC[c.weather_code]||'—'}；今日 ${Math.round(dy.temperature_2m_min[0])}～${Math.round(dy.temperature_2m_max[0])}°C，降雨機率 ${rain==null?'—':rain+'%'}；當地時間 ${t}`;
+  }catch(e){if(tok===wxTok)box.textContent='（天氣資料暫時無法取得）'}
+}
+const navUrl=(lat,lng)=>`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+function navBtn(x){const a=document.createElement('a');a.textContent=' 🧭導航';a.href=navUrl(x.lat,x.lng);a.target='_blank';a.rel='noopener';a.style.cssText='color:#60a5fa;text-decoration:none;font-size:.8rem';return a}
+$('s-loc').onclick=()=>{ // 用我的位置當出發地
+  if(!navigator.geolocation)return alert('此裝置或瀏覽器不支援定位');
+  const b=$('s-loc');b.disabled=true;hint.textContent='⏳ 定位中...';
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=+pos.coords.latitude.toFixed(4),lng=+pos.coords.longitude.toFixed(4);
+    clearInterval(timer);PLANE=null;
+    S={lat,lng,name:await rev(lat,lng)};$('s-in').value=S.name;
+    if(state==='START')state='END';
+    hint.textContent=E?'✨ 已用目前位置當出發地':'🏁 已定位，請點擊地球選擇「目的地」';
+    render();b.disabled=false;
+    if(!E)world.pointOfView({lat,lng,altitude:0.3},1200);
+  },err=>{b.disabled=false;hint.textContent=err&&err.code===1?'⚠️ 未允許定位權限，請在瀏覽器設定中開啟':'⚠️ 無法取得目前位置'},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+};
+['s','e'].forEach(k=>$(k+'-in').addEventListener('keydown',e=>{if(e.key==='Enter')$(k+'-btn').click()})); // 鍵盤 Enter 即可搜尋
+{const net=$('net'),upd=()=>{net.style.display=navigator.onLine?'none':'block'};addEventListener('online',upd);addEventListener('offline',upd);upd()}
+// ===== [手機強化 新增 2/3] 結束 =====
 
 world.onGlobeClick(async({lat,lng})=>{
   lat=+lat.toFixed(4);lng=+lng.toFixed(4);
@@ -588,7 +630,7 @@ async function loadSpots(p){
     a.textContent='📍 '+x.name;a.style.cssText='cursor:pointer;color:#fbbf24';
     a.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
     g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
-    row.append(a,introBtn(x),g);box.appendChild(row)}); // [景點介紹 新增 2/4] 加入介紹按鈕
+    row.append(a,introBtn(x),g,navBtn(x));box.appendChild(row)}); // [景點介紹 新增 2/4] 加入介紹按鈕
 }
 
 // ===== [景點介紹 新增 3/4] 景點介紹（資料來源：維基百科）開始 =====
@@ -631,8 +673,8 @@ async function showIntro(x){
     src.append('資料來源：',a);box.appendChild(src);
     if(!r.verified)box.appendChild(mk('div','⚠️ 此文章未提供座標，無法自動確認是否為同一地點，請核對標題。','margin-top:4px;font-size:.78rem;color:#fbbf24'));
   }else box.appendChild(mk('div',r===null?'找不到這個景點的維基百科介紹。':'網路或服務暫時無法使用，請稍後再按一次「📖」。','margin-top:8px;color:#fca5a5'));
-  const links=mk('div','','margin-top:8px;display:flex;gap:12px;font-size:.85rem');
-  [['🗺️ Google 地圖',`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`],['🌐 街景',svUrl(x.lat,x.lng)],['🔍 搜尋更多',`https://www.google.com/search?q=${encodeURIComponent(x.name)}`]].forEach(([t,h])=>{
+  const links=mk('div','','margin-top:8px;display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem');
+  [['🗺️ Google 地圖',`https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`],['🌐 街景',svUrl(x.lat,x.lng)],['🧭 導航',navUrl(x.lat,x.lng)],['🔍 搜尋更多',`https://www.google.com/search?q=${encodeURIComponent(x.name)}`]].forEach(([t,h])=>{
     const a=mk('a',t,'color:#34d399;text-decoration:none');a.href=h;a.target='_blank';a.rel='noopener';links.appendChild(a)});
   box.appendChild(links);
 }
@@ -719,7 +761,7 @@ function renderCustomList(){
     g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
     d.textContent='✕';d.className='del';d.title='刪除';
     d.onclick=()=>{CUSTOM.splice(i,1);saveCustom();drawMarkers();renderCustomList()};
-    row.append(a,introBtn(x),g,d);box.appendChild(row); // [景點介紹 新增 2/4] 加入介紹按鈕
+    row.append(a,introBtn(x),g,navBtn(x),d);box.appendChild(row); // [景點介紹 新增 2/4] 加入介紹按鈕
   });
 }
 $('b-btn').onclick=async()=>{

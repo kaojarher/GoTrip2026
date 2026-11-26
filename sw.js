@@ -1,26 +1,19 @@
-// [PWA 修訂] 快取版本號：每次更新檔案請遞增，舊快取會自動清除
-const CACHE = 'gotrip2026v2';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
-// [PWA 新增] 預先快取 globe.gl 函式庫，讓離線時 App 仍可開啟
-const CDN = ['https://cdn.jsdelivr.net/npm/globe.gl@2/dist/globe.gl.min.js'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(async c => {
-    await c.addAll(ASSETS);
-    // [PWA 新增] CDN 失敗不影響安裝
-    await Promise.all(CDN.map(u => fetch(u).then(r => r.ok && c.put(u, r)).catch(() => {})));
-  }));
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch', e => {
-  // [PWA 修訂] 只處理 GET；僅快取成功回應，避免快取錯誤頁
-  if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-    if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
-    return res;
-  }).catch(() => r || caches.match('./index.html'))));
+// 厚片旅行社 Service Worker：程式殼層可離線開啟；地圖圖磚與 API 一律走網路（不快取）
+const CACHE='gotrip-shell-v1';
+const LIBS=/^https:\/\/(cdn\.jsdelivr\.net|unpkg\.com)\//;
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','manifest.webmanifest','icon-192.png','icon-512.png']).catch(()=>{})))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gotrip-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{
+  const r=e.request;if(r.method!=='GET')return;
+  const u=new URL(r.url);
+  if(r.mode==='navigate'){ // 網頁本體：網路優先，離線時用快取
+    e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp));return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./'))));
+    return;
+  }
+  if(u.origin===location.origin||LIBS.test(r.url)){ // 同網站檔案與 CDN 函式庫：先給快取、背景更新
+    e.respondWith(caches.match(r).then(hit=>{
+      const net=fetch(r).then(res=>{if(res&&(res.ok||res.type==='opaque')){const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp))}return res}).catch(()=>hit);
+      return hit||net;
+    }));
+  }
 });
