@@ -135,6 +135,38 @@ header{padding-top:max(12px,env(safe-area-inset-top));padding-left:max(16px,env(
 #wx{font-size:.88rem;color:#cbd5e1;line-height:1.6}
 @media(max-width:768px){button,.small{min-height:40px}input,select{font-size:16px} /* 避免 iOS 聚焦時自動放大 */}
 /* ===== [手機強化 新增 1/3] 結束 ===== */
+/* ===== [行程/AR 新增] 樣式 ===== */
+#hint{max-width:calc(100% - 170px)}
+#ar-open{position:absolute;top:12px;right:10px;z-index:6;padding:8px 12px;background:#7c3aed;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#plan .day{margin-top:10px;border-top:1px solid #334155;padding-top:6px}
+#plan .dh{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:bold}
+#plan .it{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:4px 0;border-bottom:1px dashed #1e293b}
+#plan .no{display:inline-block;min-width:1.7em;text-align:center;border-radius:10px;color:#fff;font-size:.78rem;padding:0 5px}
+#plan .nm{cursor:pointer;color:#c4b5fd;flex:1 1 38%;min-width:6em}
+#plan .it button,#plan .it select{padding:2px 6px;font-size:.8rem;background:#334155;color:#fff;border:1px solid #475569;border-radius:4px;min-height:32px;min-width:32px}
+#plan .it button:disabled{opacity:.35}
+#plan .leg{font-size:.78rem;color:#94a3b8;padding-left:2em}
+#ar{display:none;position:fixed;inset:0;z-index:1150;background:#000;color:#fff;overflow:hidden;touch-action:none}
+#ar.on{display:block}
+#ar video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#ar-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ar-pin{position:absolute;left:0;top:0;pointer-events:auto;background:rgba(15,23,42,.8);border:2px solid #a78bfa;border-radius:14px;padding:4px 10px;font-size:.9rem;white-space:nowrap;text-align:center;cursor:pointer;max-width:70vw;overflow:hidden;text-overflow:ellipsis;will-change:transform}
+.ar-pin small{display:block;color:#fde68a;font-size:.75rem}
+#ar-top{position:absolute;top:0;left:0;right:0;padding:max(8px,env(safe-area-inset-top)) 10px 14px;display:flex;gap:8px;align-items:center;background:linear-gradient(#000c,transparent);font-size:.9rem}
+#ar-top select,#ar-top button{padding:6px 10px;background:#334155;color:#fff;border:1px solid #475569;border-radius:6px}
+#ar-bot{position:absolute;bottom:0;left:0;right:0;padding:18px 14px max(14px,env(safe-area-inset-bottom));background:linear-gradient(transparent,#000d);display:flex;align-items:center;gap:14px}
+#ar-arrow{font-size:2.2rem;line-height:1;color:#fde68a;display:inline-block}
+#print-area{display:none}
+@media print{
+  body>*:not(#print-area){display:none!important}
+  html,body{height:auto!important;display:block!important;background:#fff!important;color:#000!important}
+  #print-area{display:block!important;color:#000;font-size:12pt}
+  #print-area h1{font-size:20pt;margin-bottom:6pt}
+  #print-area h2{font-size:14pt;margin:14pt 0 4pt;border-bottom:1px solid #000}
+  #print-area table{width:100%;border-collapse:collapse;font-size:11pt}
+  #print-area td,#print-area th{border:1px solid #999;padding:3pt 5pt;text-align:left}
+}
+/* ===== [行程/AR 新增] 樣式結束 ===== */
 /* ===== [開門鈕 新增 1/2] 樣式 ===== */
 #door{position:fixed;inset:0;z-index:1100;overflow:hidden}
 #door .dl,#door .dr{position:absolute;top:0;bottom:0;width:50.5%;background:repeating-linear-gradient(90deg,#8a5a3b 0 38px,#7a4e32 38px 40px);transition:transform .9s cubic-bezier(.7,0,.3,1)}
@@ -433,7 +465,7 @@ async function fetchBuf(url){
 <!-- ===== [VRM 新增 4/5] 結束 ===== -->
 <header style="display:flex;justify-content:space-between;align-items:center"><span>🌍 3D 地球模擬飛行與街景工具</span><span><button id="svc" type="button" style="background:#334155;padding:6px 12px;font-size:.9rem;margin-right:6px">🧑‍💼 服務人員</button><button id="home" onclick="showSplash()">🏠 回到櫃檯</button></span></header>
 <div class="container">
-  <div id="map"><div id="hint">📍 請點擊地球選擇「出發地」</div><div id="globe"></div><div id="err"></div><div style="position:absolute;right:8px;bottom:6px;z-index:5;font-size:11px;color:#94a3b8">圖資：© Esri / © OpenStreetMap contributors / 內政部國土測繪中心</div></div>
+  <div id="map"><div id="hint">📍 請點擊地球選擇「出發地」</div><div id="globe"></div><div id="err"></div><button id="ar-open" type="button" aria-label="開啟 AR 實境導覽">📷 AR</button><div style="position:absolute;right:8px;bottom:6px;z-index:5;font-size:11px;color:#94a3b8">圖資：© Esri / © OpenStreetMap contributors / 內政部國土測繪中心</div></div>
   <div id="sidebar">
     <div class="card" style="border-left:4px solid #38bdf8">💡 第 1 下點擊選起點，第 2 下選目的地。左鍵拖曳旋轉，滾輪縮放。</div>
     <div><label>🚩 出發地</label><div class="row"><input id="s-in" value="台北"><button class="small" id="s-btn">搜尋</button><button class="small" id="s-loc" type="button" title="用我的位置當出發地" aria-label="用我的位置當出發地">📍</button></div></div>
@@ -445,7 +477,16 @@ async function fetchBuf(url){
     <div class="card"><b>📝 批次新增景點</b>
       <textarea id="b-in" rows="5" placeholder="每行一個景點，例如：&#10;淺草寺&#10;東京晴空塔&#10;上野動物園&#10;（也可用 、 ， ； 分隔）"></textarea>
       <div class="row"><button class="small" id="b-btn" style="flex:1">📍 加入地圖</button><button class="small" id="b-clr">🗑️ 清除全部</button></div>
-      <div id="b-msg"></div><div id="b-list"></div></div>
+      <div id="b-msg"></div></div>
+    <!-- ===== [行程規劃 新增] 介面 ===== -->
+    <div class="card" id="plan-card"><b>🗓️ 行程規劃</b>
+      <div class="row" style="align-items:center"><span>出發日</span><input id="t-date" type="date" style="min-width:130px"></div>
+      <div class="row" style="align-items:center"><span>每天</span><input id="t-per" type="number" min="1" max="20" value="4" style="width:64px;flex:none"><span>個景點</span><button class="small" id="t-auto" type="button" style="flex:1">🧭 最短路線＋自動分天</button></div>
+      <div class="row"><button class="small" id="t-opt" type="button" style="flex:1">↕ 每天內最短路線排序</button><button class="small" id="t-view" type="button">🔭 看全程</button></div>
+      <div id="plan" style="margin-top:8px"></div>
+      <div class="row"><button class="small" id="x-share" type="button" style="flex:1">📤 分享</button><button class="small" id="x-ics" type="button" style="flex:1">📅 ICS</button><button class="small" id="x-pdf" type="button" style="flex:1">📄 PDF</button></div>
+      <div id="x-msg" style="margin-top:6px;color:#94a3b8;font-size:.82rem;word-break:break-word"></div></div>
+    <!-- ===== [行程規劃 新增] 介面結束 ===== -->
     <!-- ===== [批次景點 新增 2/5] 結束 ===== -->
     <!-- ===== [景點介紹 新增 1/4] 介紹卡片 開始 ===== -->
     <div class="card" id="intro-card" style="display:none;border-left:4px solid #a78bfa">
@@ -464,6 +505,11 @@ async function fetchBuf(url){
     <div class="g-txt" id="g-txt" data-avatar-text></div></div>
 </div>
 <!-- ===== [導覽員 新增 2/4] 結束 ===== -->
+<!-- ===== [AR 新增] 實境導覽覆蓋層、[PDF 新增] 列印區 ===== -->
+<div id="ar" role="dialog" aria-label="AR 實境導覽"><video id="ar-video" playsinline muted autoplay></video><div id="ar-layer"></div>
+  <div id="ar-top"><b id="ar-head">方位 --</b><span id="ar-st" style="flex:1;text-align:center;font-size:.8rem;min-width:0"></span><select id="ar-r" aria-label="搜尋範圍"><option value="500">500 m</option><option value="1000">1 km</option><option value="3000" selected>3 km</option><option value="10000">10 km</option></select><button id="ar-x" type="button">✕ 關閉</button></div>
+  <div id="ar-bot"><span id="ar-arrow">▲</span><div id="ar-near" style="flex:1;min-width:0">尋找景點中…</div></div></div>
+<div id="print-area"></div>
 <script>
 const $=id=>document.getElementById(id), hint=$('hint');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); // 外部資料（地名）顯示前先跳脫，避免 HTML 注入
@@ -473,7 +519,8 @@ Object.defineProperty(hint,'textContent',{configurable:true,
 function showErr(m){const e=$('err');e.style.display='block';e.innerHTML='<b>⚠️ 3D 地球無法顯示</b><br>'+m}
 if(typeof Globe==='undefined'){showErr('globe.gl 沒有載入成功（網路或 CDN 被擋）。');throw 0}
 
-let S=null,E=null,state='START',plane=null,timer=null;
+let S=null,E=null,state='START',plane=null,timer=null,flyRaf=0;
+const stopFly=()=>{if(flyRaf){cancelAnimationFrame(flyRaf);flyRaf=0}};
 const TILES={
   nlsc:(x,y,l)=>`https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/${l}/${y}/${x}`,
   osm:(x,y,l)=>`https://tile.openstreetmap.org/${l}/${x}/${y}.png`,
@@ -508,13 +555,14 @@ if(typeof world.htmlElementVisibilityModifier==='function')world.htmlElementVisi
 const fit=()=>world.width($('map').clientWidth).height($('map').clientHeight);
 fit();addEventListener('resize',fit);
 world.pointOfView({lat:23.5,lng:121.5,altitude:2.2});
+world.pathPoints('coords').pathPointLat(p=>p[0]).pathPointLng(p=>p[1]).pathColor(d=>d.color).pathStroke(0.25).pathPointAlt(0.003).pathTransitionDuration(0); // 每日行程路線
 let lastStroke=0.15;
 setInterval(()=>{try{
   const alt=world.pointOfView().altitude;
   $('globe').classList.toggle('far',alt>0.6);
   // 航線粗細隨縮放調整：放大時變細，約維持 2~3 像素
   const st=Math.min(0.4,Math.max(0.01,alt*0.15));
-  if(Math.abs(Math.log(st/lastStroke))>0.15){lastStroke=st;world.arcStroke(st)}
+  if(Math.abs(Math.log(st/lastStroke))>0.15){lastStroke=st;world.arcStroke(st);world.pathStroke(Math.max(0.03,st*0.6))}
 }catch(e){}},300);
 
 const dist=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return Math.round(12742*Math.asin(Math.sqrt(h)))};
@@ -540,7 +588,8 @@ function drawMarkers(){
     if(E)MK.push({type:'end',lat:E.lat,lng:E.lng,alt:0,color:'#22c55e',text:'🏁 '+E.name});
   }
   SPOTS.forEach(p=>MK.push({type:'spot',lat:p.lat,lng:p.lng,alt:0,color:'#f59e0b',text:p.name}));
-  CUSTOM.forEach(p=>MK.push({type:'cspot',lat:p.lat,lng:p.lng,alt:0,color:'#8b5cf6',text:p.name})); // [批次景點 新增 3/5]
+  CUSTOM.forEach(p=>MK.push({type:'cspot',lat:p.lat,lng:p.lng,alt:0,color:dayColor(p.day),text:planNo(p)+p.name})); // [行程規劃] 依天數上色並編號
+  drawRoutes();
   world.htmlElementsData(allMarks());
 }
 function render(){if(E)loadWeather(E);else $('wx').textContent='';
@@ -554,7 +603,7 @@ function render(){if(E)loadWeather(E);else $('wx').textContent='';
     $('sv').href=`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${E.lat},${E.lng}`;$('sv').style.display='block';
   }else world.arcsData([]);
 }
-function reset(){clearInterval(timer);PLANE=null;arrived=false;S=E=null;SPOTS=[];drawMarkers();/* [批次景點 新增 3/5] 改用 drawMarkers 以保留自訂景點 */$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('wx').textContent='';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
+function reset(){stopFly();PLANE=null;arrived=false;S=E=null;SPOTS=[];drawMarkers();/* [批次景點 新增 3/5] 改用 drawMarkers 以保留自訂景點 */$('spots').textContent='飛抵目的地後顯示';$('sv').style.display='none';$('wx').textContent='';$('info').innerHTML='<b>航程資訊：</b>請設定地點'}
 
 // ===== [手機強化 新增 2/3] 天氣／定位／導航／離線提示 =====
 const WXC={0:'晴朗',1:'大致晴朗',2:'多雲',3:'陰天',45:'有霧',48:'霧凇',51:'毛毛雨',53:'毛毛雨',55:'毛毛雨',56:'凍毛毛雨',57:'凍毛毛雨',61:'小雨',63:'中雨',65:'大雨',66:'凍雨',67:'凍雨',71:'小雪',73:'中雪',75:'大雪',77:'雪粒',80:'陣雨',81:'陣雨',82:'強陣雨',85:'陣雪',86:'強陣雪',95:'雷雨',96:'雷雨夾冰雹',99:'強雷雨夾冰雹'};
@@ -576,7 +625,7 @@ $('s-loc').onclick=()=>{ // 用我的位置當出發地
   const b=$('s-loc');b.disabled=true;hint.textContent='⏳ 定位中...';
   navigator.geolocation.getCurrentPosition(async pos=>{
     const lat=+pos.coords.latitude.toFixed(4),lng=+pos.coords.longitude.toFixed(4);
-    clearInterval(timer);PLANE=null;
+    stopFly();PLANE=null;
     S={lat,lng,name:await rev(lat,lng)};$('s-in').value=S.name;
     if(state==='START')state='END';
     hint.textContent=E?'✨ 已用目前位置當出發地':'🏁 已定位，請點擊地球選擇「目的地」';
@@ -602,8 +651,8 @@ world.onGlobeClick(async({lat,lng})=>{
 
 $('end-trip').onclick=()=>{reset();world.arcsData([]);state='START';$('s-in').value='';$('e-in').value='';$('end-trip').style.display='none';hint.textContent='📍 請點擊地球選擇「出發地」';world.pointOfView({lat:23.5,lng:121.5,altitude:2.2});showSplash(true)};
 $('basemap').onchange=e=>world.globeTileEngineUrl(TILES[e.target.value]);
-$('s-btn').onclick=async()=>{const r=await geo($('s-in').value);if(!r)return alert('找不到該地點！');clearInterval(timer);PLANE=null;S=r;if(state==='START')state='END';hint.textContent='🏁 請點擊地球選擇「目的地」';render()};
-$('e-btn').onclick=async()=>{const r=await geo($('e-in').value);if(!r)return alert('找不到該地點！');clearInterval(timer);PLANE=null;E=r;state='DONE';hint.textContent='✨ 設定完成！';render()};
+$('s-btn').onclick=async()=>{const r=await geo($('s-in').value);if(!r)return alert('找不到該地點！');stopFly();PLANE=null;S=r;if(state==='START')state='END';hint.textContent='🏁 請點擊地球選擇「目的地」';render()};
+$('e-btn').onclick=async()=>{const r=await geo($('e-in').value);if(!r)return alert('找不到該地點！');stopFly();PLANE=null;E=r;state='DONE';hint.textContent='✨ 設定完成！';render()};
 
 
 // 景點搜尋：Overpass(OSM 旅遊景點) → 失敗或無結果時改用維基百科地理搜尋
@@ -723,6 +772,7 @@ const CKEY='gotrip_custom_spots',BATCH_MAX=50;
 let batchBusy=false;
 try{CUSTOM=JSON.parse(localStorage.getItem(CKEY)||'[]').filter(x=>x&&x.name&&isFinite(x.lat)&&isFinite(x.lng))}catch(e){CUSTOM=[]}
 const saveCustom=()=>{try{localStorage.setItem(CKEY,JSON.stringify(CUSTOM))}catch(e){}};
+CUSTOM.forEach(x=>{x.day=Math.max(1,parseInt(x.day)||1)}); // 舊資料沒有天數：預設第 1 天
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // 解析：每行一個；同行可用 、 ， ； ; 分隔；自動去除編號/項目符號、空白行與重複項
 function parseBatch(txt){
@@ -752,18 +802,151 @@ function viewSpots(list){
   const far=Math.max(...list.map(p=>dist(c.lat,c.lng,p.lat,p.lng)));
   world.pointOfView({lat:c.lat,lng:c.lng,altitude:Math.min(2.2,Math.max(0.05,far/6371*2.2))},1200);
 }
+// ===== [行程規劃 新增] 每日分組、排序、路線、距離、分享與匯出 =====
+const DAY_COLORS=['#8b5cf6','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899','#14b8a6','#a3e635'];
+const dayColor=d=>DAY_COLORS[((d||1)-1)%DAY_COLORS.length];
+const distM=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 12742000*Math.asin(Math.sqrt(h))};
+const dM=(p,q)=>distM(p.lat,p.lng,q.lat,q.lng);
+const fmtD=m=>m<1000?Math.round(m)+' m':(m/1000).toFixed(m<10000?1:0)+' km';
+const lastDay=()=>CUSTOM.length?(CUSTOM[CUSTOM.length-1].day||1):1;
+const planNo=p=>{let n=0;for(const x of CUSTOM){if((x.day||1)===(p.day||1))n++;if(x===p)break}return (p.day||1)+'-'+n+' '};
+const dayList=()=>{const m=new Map();CUSTOM.forEach(x=>{const d=x.day||1;if(!m.has(d))m.set(d,[]);m.get(d).push(x)});return [...m.entries()].sort((a,b)=>a[0]-b[0])};
+const routeM=l=>{let t=0;for(let i=1;i<l.length;i++)t+=dM(l[i-1],l[i]);return t};
+function normDays(){const u=[...new Set(CUSTOM.map(x=>x.day||1))].sort((a,b)=>a-b),m=new Map(u.map((d,i)=>[d,i+1]));CUSTOM.forEach(x=>{x.day=m.get(x.day||1)})}
+const pad2=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())};
+try{$('t-date').value=localStorage.getItem('gotrip_trip_date')||todayStr()}catch(e){$('t-date').value=todayStr()}
+const tripDate=day=>{const v=$('t-date').value;if(!v)return null;const d=new Date(v+'T00:00');if(isNaN(d))return null;d.setDate(d.getDate()+day-1);return d};
+const dateTxt=day=>{const d=tripDate(day);return d?d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'}):''};
+const xmsg=t=>{$('x-msg').textContent=t};
+let routeSig='';
+function drawRoutes(){ // 每天一條路線，不同天不同顏色
+  const paths=dayList().filter(([d,l])=>l.length>1).map(([d,l])=>({color:dayColor(d),coords:l.map(p=>[p.lat,p.lng])}));
+  const sig=JSON.stringify(paths);if(sig===routeSig)return;routeSig=sig;world.pathsData(paths);
+}
+function commit(){saveCustom();drawMarkers();renderCustomList()}
+function moveWithin(x,dir){const i=CUSTOM.indexOf(x),d=x.day||1;let j=i+dir;while(j>=0&&j<CUSTOM.length&&(CUSTOM[j].day||1)!==d)j+=dir;if(i<0||j<0||j>=CUSTOM.length)return;[CUSTOM[i],CUSTOM[j]]=[CUSTOM[j],CUSTOM[i]];commit()}
+function moveToDay(x,d){const i=CUSTOM.indexOf(x);if(i<0||(x.day||1)===d)return;CUSTOM.splice(i,1);x.day=d;let at=-1;CUSTOM.forEach((y,k)=>{if((y.day||1)===d)at=k});if(at<0)CUSTOM.push(x);else CUSTOM.splice(at+1,0,x);commit()}
+// 最短路線：最近鄰居法 + 2-opt 改良（第一個景點固定為起點）
+function nnOrder(list){const rest=list.slice(),out=[rest.shift()];while(rest.length){const c=out[out.length-1];let bi=0,bd=Infinity;rest.forEach((p,i)=>{const d=dM(c,p);if(d<bd){bd=d;bi=i}});out.push(rest.splice(bi,1)[0])}return out}
+function twoOpt(a){const n=a.length;let imp=true,guard=0;
+  while(imp&&guard++<200){imp=false;
+    for(let i=1;i<n-1;i++)for(let j=i+1;j<n;j++){
+      const before=dM(a[i-1],a[i])+(j+1<n?dM(a[j],a[j+1]):0),after=dM(a[i-1],a[j])+(j+1<n?dM(a[i],a[j+1]):0);
+      if(after<before-1){a.splice(i,j-i+1,...a.slice(i,j+1).reverse());imp=true}}}
+  return a}
+const optList=l=>l.length<3?l.slice():twoOpt(nnOrder(l));
+$('t-opt').onclick=()=>{
+  if(CUSTOM.length<3)return xmsg('每天至少要有 3 個景點才需要排序');
+  const out=[];dayList().forEach(([d,l])=>out.push(...optList(l)));CUSTOM=out;commit();
+  xmsg('已將每一天內的順序改為較短路線（每天第一個景點固定為起點）');
+};
+$('t-auto').onclick=()=>{
+  if(CUSTOM.length<2)return xmsg('請先加入至少 2 個景點');
+  const n=Math.max(1,Math.min(20,parseInt($('t-per').value)||4)),ord=optList(CUSTOM.slice());
+  ord.forEach((x,i)=>{x.day=Math.floor(i/n)+1});CUSTOM=ord;commit();viewSpots(CUSTOM);
+  xmsg(`已依最短路線排序，並分成 ${Math.ceil(ord.length/n)} 天（以第一個景點為起點）`);
+};
+$('t-view').onclick=()=>viewSpots(CUSTOM);
+$('t-date').onchange=()=>{try{localStorage.setItem('gotrip_trip_date',$('t-date').value)}catch(e){}renderCustomList()};
 function renderCustomList(){
-  const box=$('b-list');box.textContent='';
-  CUSTOM.forEach((x,i)=>{
-    const row=document.createElement('div'),a=document.createElement('span'),g=document.createElement('a'),d=document.createElement('span');
-    a.textContent='📌 '+x.name;a.style.cssText='cursor:pointer;color:#c4b5fd';
-    a.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
-    g.textContent=' 🌐街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none;font-size:.8rem';
-    d.textContent='✕';d.className='del';d.title='刪除';
-    d.onclick=()=>{CUSTOM.splice(i,1);saveCustom();drawMarkers();renderCustomList()};
-    row.append(a,introBtn(x),g,navBtn(x),d);box.appendChild(row); // [景點介紹 新增 2/4] 加入介紹按鈕
+  normDays();
+  const box=$('plan');box.textContent='';
+  const days=dayList(),mk=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
+  const btn=(t,title,fn)=>{const b=mk('button','',t);b.type='button';b.title=title;b.setAttribute('aria-label',title);b.onclick=fn;return b};
+  if(!days.length){const e=mk('div','','尚未加入景點。請先用上方「批次新增景點」。');e.style.color='#94a3b8';box.appendChild(e);return}
+  let total=0;days.forEach(([d,l])=>total+=routeM(l));
+  const sum=mk('div','',`共 ${days.length} 天、${CUSTOM.length} 個景點，直線距離合計約 ${fmtD(total)}`);sum.style.color='#fde68a';box.appendChild(sum);
+  days.forEach(([day,list])=>{
+    const wrap=mk('div','day'),dh=mk('div','dh');
+    const t=mk('span','',`📅 第 ${day} 天${dateTxt(day)?'（'+dateTxt(day)+'）':''}`);t.style.color=dayColor(day);
+    const info=mk('span','',`${list.length} 個・約 ${fmtD(routeM(list))}`);info.style.cssText='font-weight:normal;font-size:.8rem;color:#94a3b8';
+    dh.append(t,info);wrap.appendChild(dh);
+    list.forEach((x,i)=>{
+      if(i>0)wrap.appendChild(mk('div','leg','↓ 直線 '+fmtD(dM(list[i-1],x))));
+      const it=mk('div','it'),no=mk('span','no',String(i+1));no.style.background=dayColor(day);
+      const nm=mk('span','nm',x.name);nm.onclick=()=>world.pointOfView({lat:x.lat,lng:x.lng,altitude:0.04},1200);
+      const up=btn('▲','上移',()=>moveWithin(x,-1)),dn=btn('▼','下移',()=>moveWithin(x,1));
+      up.disabled=i===0;dn.disabled=i===list.length-1;
+      const sel=mk('select');sel.title='移到第幾天';sel.setAttribute('aria-label','移到第幾天');
+      for(let k=1;k<=days.length+1;k++){const o=mk('option','','第'+k+'天');o.value=k;if(k===day)o.selected=true;sel.appendChild(o)}
+      sel.onchange=()=>moveToDay(x,+sel.value);
+      const g=mk('a','','🌐');g.title='街景';g.href=svUrl(x.lat,x.lng);g.target='gsv';g.style.cssText='color:#34d399;text-decoration:none';
+      const del=btn('✕','刪除',()=>{const k=CUSTOM.indexOf(x);if(k>=0)CUSTOM.splice(k,1);commit()});del.style.color='#f87171';
+      it.append(no,nm,up,dn,sel,introBtn(x),g,navBtn(x),del);wrap.appendChild(it);
+    });
+    box.appendChild(wrap);
   });
 }
+// --- 分享：Web Share / 分享連結（行程編碼在網址 # 之後，不經過伺服器） ---
+function tripText(){let t='🍞 厚片旅行社行程\n';dayList().forEach(([d,l])=>{t+=`\n第 ${d} 天${dateTxt(d)?'（'+dateTxt(d)+'）':''}\n`;l.forEach((x,i)=>{t+=`${i+1}. ${x.name}\n`})});return t.trim()}
+function tripLink(){
+  const a=CUSTOM.map(x=>[x.name,+(+x.lat).toFixed(5),+(+x.lng).toFixed(5),x.day||1]);
+  const bytes=new TextEncoder().encode(JSON.stringify(a));let bin='';bytes.forEach(c=>bin+=String.fromCharCode(c));
+  return location.href.split('#')[0]+'#trip='+btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function importTripFromHash(){
+  const m=location.hash.match(/^#trip=([A-Za-z0-9_-]+)$/);if(!m)return;
+  const clean=()=>{try{history.replaceState(null,'',location.href.split('#')[0])}catch(e){}};
+  try{
+    let b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';
+    const arr=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));
+    if(!Array.isArray(arr))throw 0;
+    const list=arr.slice(0,100).map(r=>({name:String(r[0]).slice(0,80),lat:+r[1],lng:+r[2],day:Math.max(1,Math.min(60,parseInt(r[3])||1))})).filter(x=>x.name&&isFinite(x.lat)&&isFinite(x.lng)&&Math.abs(x.lat)<=90&&Math.abs(x.lng)<=180);
+    if(!list.length)throw 0;
+    if(CUSTOM.length&&!confirm(`收到分享的行程（${list.length} 個景點）。要取代目前的自訂景點嗎？`)){clean();return}
+    CUSTOM=list;commit();viewSpots(CUSTOM);xmsg(`✅ 已載入分享的行程（${list.length} 個景點）`);clean();
+  }catch(e){xmsg('⚠️ 分享連結無法解析');clean()}
+}
+$('x-share').onclick=async()=>{
+  if(!CUSTOM.length)return xmsg('請先加入景點');
+  const url=tripLink(),text=tripText();
+  if(navigator.share){try{await navigator.share({title:'厚片旅行社行程',text,url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(text+'\n\n'+url);xmsg('✅ 已複製行程文字與分享連結')}catch(e){prompt('請複製以下分享連結：',url)}
+};
+// --- ICS 行事曆：每天 09:00 起依序排程（使用「浮動時間」，以您手機的本地時區顯示） ---
+const icsEsc=s=>String(s).replace(/\\/g,'\\\\').replace(/[,;]/g,m=>'\\'+m).replace(/\r?\n/g,'\\n');
+const icsFold=l=>{const out=[],enc=new TextEncoder();let cur='',n=0;for(const ch of l){const b=enc.encode(ch).length;if(n+b>(out.length?72:73)){out.push(cur);cur='';n=0}cur+=ch;n+=b}out.push(cur);return out.join('\r\n ')}; // 依 RFC 5545 以位元組折行（中文不會被切半）
+function buildICS(){
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GoTrip//ZH-TW//','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:'+icsEsc('厚片旅行社行程')];
+  dayList().forEach(([day,list])=>{
+    const d0=tripDate(day)||new Date(todayStr()+'T00:00');
+    const step=Math.max(30,Math.min(120,Math.floor(780/list.length))),dur=Math.max(30,step-30);
+    const f=(mins)=>`${d0.getFullYear()}${pad2(d0.getMonth()+1)}${pad2(d0.getDate())}T${pad2(Math.floor(mins/60))}${pad2(mins%60)}00`;
+    list.forEach((x,i)=>{
+      const st=540+i*step;
+      L.push('BEGIN:VEVENT','UID:gotrip-'+stamp+'-'+day+'-'+i+'@gotrip','DTSTAMP:'+stamp,'DTSTART:'+f(st),'DTEND:'+f(st+dur),
+        'SUMMARY:'+icsEsc(`第${day}天 ${x.name}`),'LOCATION:'+icsEsc(x.name),'GEO:'+(+x.lat).toFixed(5)+';'+(+x.lng).toFixed(5),
+        'DESCRIPTION:'+icsEsc('地圖：https://www.google.com/maps/search/?api=1&query='+x.lat+','+x.lng),'END:VEVENT');
+    });
+  });
+  L.push('END:VCALENDAR');return L.map(icsFold).join('\r\n')+'\r\n';
+}
+function downloadText(name,mime,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+$('x-ics').onclick=()=>{
+  if(!CUSTOM.length)return xmsg('請先加入景點');
+  downloadText('gotrip-itinerary.ics','text/calendar;charset=utf-8',buildICS());
+  xmsg('✅ 已下載 ICS 檔，開啟後即可加入行事曆（每天 09:00 起依序排程，可再自行調整時間）');
+};
+// --- PDF：開啟列印畫面，選擇「另存為 PDF」 ---
+function buildPrint(){
+  const box=$('print-area');box.textContent='';
+  const mk=(tag,txt)=>{const e=document.createElement(tag);if(txt!=null)e.textContent=txt;return e};
+  const days=dayList();let total=0;days.forEach(([d,l])=>total+=routeM(l));
+  box.appendChild(mk('h1','🍞 厚片旅行社行程表'));
+  const f=dateTxt(1),l=dateTxt(days.length);
+  box.appendChild(mk('p',`${days.length} 天・${CUSTOM.length} 個景點・直線距離合計約 ${fmtD(total)}${f?'・'+f+(days.length>1?' ～ '+l:''):''}`));
+  days.forEach(([day,list])=>{
+    box.appendChild(mk('h2',`第 ${day} 天${dateTxt(day)?'（'+dateTxt(day)+'）':''}・約 ${fmtD(routeM(list))}`));
+    const tb=mk('table'),hd=mk('tr');['#','景點','座標','距上一站（直線）'].forEach(t=>hd.appendChild(mk('th',t)));tb.appendChild(hd);
+    list.forEach((x,i)=>{const tr=mk('tr');[String(i+1),x.name,`${(+x.lat).toFixed(4)}, ${(+x.lng).toFixed(4)}`,i?fmtD(dM(list[i-1],x)):'—'].forEach(t=>tr.appendChild(mk('td',t)));tb.appendChild(tr)});
+    box.appendChild(tb);
+  });
+  const note=mk('p','距離為地圖上的直線距離，實際交通時間與距離請以導航為準。分享連結：'+tripLink());note.style.cssText='font-size:9pt;margin-top:12pt;word-break:break-all';box.appendChild(note);
+}
+$('x-pdf').onclick=()=>{if(!CUSTOM.length)return xmsg('請先加入景點');buildPrint();xmsg('請在列印畫面選擇「另存為 PDF」');setTimeout(()=>window.print(),100)};
+// ===== [行程規劃 新增] 結束 =====
+
 $('b-btn').onclick=async()=>{
   if(batchBusy)return;
   const msg=$('b-msg'),all=parseBatch($('b-in').value),names=all.slice(0,BATCH_MAX);
@@ -776,7 +959,7 @@ $('b-btn').onclick=async()=>{
       if(have.has(n.toLowerCase())){dup.push(n);continue}
       msg.textContent=`⏳ 查詢中 ${i+1}/${names.length}：${n}`;
       const r=await geoSpot(n);
-      if(r){CUSTOM.push(r);have.add(n.toLowerCase());ok.push(r);drawMarkers();renderCustomList()}else fail.push(n);
+      if(r){r.day=lastDay();CUSTOM.push(r);have.add(n.toLowerCase());ok.push(r);drawMarkers();renderCustomList()}else fail.push(n);
       if(i<names.length-1)await sleep(1100); // Nominatim 使用規範：每秒最多 1 次請求
     }
   }finally{batchBusy=false;$('b-btn').disabled=false}
@@ -793,22 +976,125 @@ $('b-clr').onclick=()=>{
   CUSTOM=[];saveCustom();drawMarkers();renderCustomList();$('b-msg').textContent='已清除全部自訂景點';
 };
 renderCustomList();if(CUSTOM.length)drawMarkers(); // 載入上次儲存的自訂景點
+setTimeout(importTripFromHash,700); // 若網址帶有分享行程就匯入
 // ===== [批次景點 新增 4/5] 結束 =====
+
+// ===== [AR 實境導覽 新增] 相機 + GPS + 指南針 =====
+(function(){
+  const ar=$('ar'),vid=$('ar-video'),layer=$('ar-layer'),st=t=>{$('ar-st').textContent=t};
+  let stream=null,watchId=null,pos=null,heading=null,hSmooth=null,pitch=90,raf=0,iv=0,pins=[],all=[],near=[],nearFor=null,tok=0,radius=3000,key='',lastNear='';
+  const angDiff=(a,b)=>((a-b+540)%360)-180;
+  const compTxt=h=>['北','東北','東','東南','南','西南','西','西北'][Math.round(h/45)%8];
+  function compassHeading(alpha,beta,gamma){ // W3C 公式：手機直立時，後鏡頭朝向的羅盤方位
+    const r=Math.PI/180,a=alpha*r,b=beta*r,g=gamma*r,cA=Math.cos(a),sA=Math.sin(a),sB=Math.sin(b),cG=Math.cos(g),sG=Math.sin(g);
+    return (Math.atan2(-cA*sG-sA*sB*cG,-sA*sG+cA*sB*cG)/r+360)%360;
+  }
+  function setHead(h){if(h==null||isNaN(h))return;hSmooth=hSmooth==null?h:(hSmooth+angDiff(h,hSmooth)*0.25+360)%360;heading=hSmooth}
+  function onOri(e){
+    if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))setHead(e.webkitCompassHeading); // iOS
+    else if(e.alpha!=null&&e.beta!=null&&e.gamma!=null&&(e.absolute||e.type==='deviceorientationabsolute'))setHead(compassHeading(e.alpha,e.beta,e.gamma)); // Android
+    if(e.beta!=null)pitch=e.beta;
+  }
+  async function askOri(){
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        if(await DeviceOrientationEvent.requestPermission()!=='granted'){st('⚠️ 未允許動作與方向感測器');return false}}
+    }catch(e){st('⚠️ 無法使用方向感測器（需要 https）');return false}
+    addEventListener('deviceorientationabsolute',onOri,true);addEventListener('deviceorientation',onOri,true);return true;
+  }
+  async function fetchNear(){ // 使用者附近的維基百科景點（不需預先規劃）
+    if(!pos||(nearFor&&distM(nearFor.lat,nearFor.lng,pos.lat,pos.lng)<400))return;
+    nearFor={lat:pos.lat,lng:pos.lng};const t=++tok;
+    try{const d=await (await fetch(`https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${pos.lat}|${pos.lng}&gsradius=10000&gslimit=40&format=json&origin=*`)).json();
+      if(t===tok)near=(d.query.geosearch||[]).map(x=>({lat:x.lat,lng:x.lon,name:x.title}))}catch(e){}
+  }
+  function rebuild(){
+    layer.textContent='';pins=[];all=[];if(!pos)return;
+    const seen=new Set();
+    [...CUSTOM,...SPOTS,...near].forEach(x=>{if(seen.has(x.name))return;seen.add(x.name);all.push({x,d:distM(pos.lat,pos.lng,x.lat,x.lng)})});
+    all.sort((a,b)=>a.d-b.d);
+    pins=all.filter(p=>p.d<=radius).slice(0,30);
+    pins.forEach((p,i)=>{
+      const el=document.createElement('div'),n=document.createElement('div'),sm=document.createElement('small');
+      el.className='ar-pin';n.textContent='📍 '+p.x.name;el.append(n,sm);el.style.display='none';
+      el.onclick=()=>{closeAR();showIntro(p.x)}; // 點選：關閉 AR，由服務人員念出簡介
+      layer.appendChild(el);p.el=el;p.sm=sm;p.row=i%3;p.vis=false;
+    });
+  }
+  function tick(){
+    raf=requestAnimationFrame(tick);
+    const W=ar.clientWidth,H=ar.clientHeight,hf=W>H?66:52,ppd=W/hf;
+    $('ar-head').textContent=heading==null?'方位 --':`${compTxt(heading)} ${Math.round(heading)}°`;
+    if(!pos||heading==null)return;
+    const horizon=H/2+(pitch-90)*ppd;
+    pins.forEach(p=>{
+      const rel=angDiff(bearing(pos,p.x),heading),vis=Math.abs(rel)<hf/2+10;
+      if(vis!==p.vis){p.vis=vis;p.el.style.display=vis?'':'none'}
+      if(!vis)return;
+      const t=fmtD(distM(pos.lat,pos.lng,p.x.lat,p.x.lng));if(p.t!==t){p.t=t;p.sm.textContent=t}
+      const y=Math.min(H-150,Math.max(110,horizon-50-p.row*58));
+      p.el.style.transform=`translate(${W/2+rel*ppd}px,${y}px) translate(-50%,-50%)`;
+    });
+    const n=all[0];
+    if(n){
+      $('ar-arrow').style.transform=`rotate(${angDiff(bearing(pos,n.x),heading)}deg)`;
+      const t=`最近：${n.x.name}・${fmtD(distM(pos.lat,pos.lng,n.x.lat,n.x.lng))}`;if(t!==lastNear){lastNear=t;$('ar-near').textContent=t}
+    }
+  }
+  function refresh(){
+    if(!pos)return;fetchNear();
+    const k=`${pos.lat.toFixed(3)},${pos.lng.toFixed(3)}|${radius}|${CUSTOM.length}|${SPOTS.length}|${near.length}`;
+    if(k!==key){key=k;rebuild()}
+    st(`GPS ±${Math.round(pos.acc)} m・範圍內 ${pins.length} 個景點`+(heading==null?'・方位校正中':''));
+    if(!all.length)$('ar-near').textContent='附近沒有景點資料（需要網路，或先加入景點）';
+  }
+  async function openAR(){
+    if(ar.classList.contains('on'))return;
+    ar.classList.add('on');st('啟動中…');hSmooth=heading=null;nearFor=null;near=[];key='';lastNear='';$('ar-near').textContent='尋找景點中…';
+    await askOri(); // 必須在點擊事件中最先要求（iOS）
+    if(!navigator.geolocation){st('⚠️ 此裝置不支援定位')}
+    else watchId=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0};refresh()},
+      e=>st(e&&e.code===1?'⚠️ 未允許定位權限':'⚠️ 無法取得位置（請到戶外或開啟 GPS）'),{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+    try{
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      if(!ar.classList.contains('on')){stream.getTracks().forEach(t=>t.stop());stream=null;return}
+      vid.srcObject=stream;await vid.play().catch(()=>{});
+    }catch(e){st('⚠️ 無法開啟相機（需要 https 與相機權限），改用方位模式')}
+    if(ar.classList.contains('on')){cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);clearInterval(iv);iv=setInterval(refresh,1000)}
+  }
+  function closeAR(){
+    ar.classList.remove('on');cancelAnimationFrame(raf);clearInterval(iv);
+    removeEventListener('deviceorientationabsolute',onOri,true);removeEventListener('deviceorientation',onOri,true);
+    if(watchId!=null){navigator.geolocation.clearWatch(watchId);watchId=null}
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+    vid.srcObject=null;layer.textContent='';pins=[];all=[];pos=null;
+  }
+  $('ar-open').onclick=openAR;$('ar-x').onclick=closeAR;
+  $('ar-r').onchange=e=>{radius=+e.target.value;key='';refresh()};
+})();
+// ===== [AR 實境導覽 新增] 結束 =====
 
 $('fly').onclick=()=>{
   if(!S||!E)return alert('請先選擇起點與目的地！');
-  clearInterval(timer);
+  stopFly();
   arrived=false;SPOTS=[];PLANE=null;$('spots').textContent='飛行中...';drawMarkers();
   const total=200,h=arcAlt(),d=dist(S.lat,S.lng,E.lat,E.lng);let step=0;const keepAlt=world.pointOfView().altitude,destE=E; // 點擊當下的縮放
-  timer=setInterval(()=>{
-    step++;const f=step/total,p=slerp(S,E,f),alt=Math.sin(f*Math.PI)*h;
-    if(!PLANE)PLANE={type:'plane',lat:0,lng:0,alt:0};const prev=slerp(S,E,(step-1)/total);
+  const FLY_MS=6000,minGap=isMobile()?33:0;let prog=0,last=performance.now(),lastDraw=0; // 以時間推進（rAF），手機限制約 30fps
+  const frame=now=>{
+    flyRaf=requestAnimationFrame(frame);
+    prog=Math.min(1,prog+Math.min(Math.max(now-last,0),100)/FLY_MS);last=now;
+    if(prog<1&&now-lastDraw<minGap)return;
+    lastDraw=now;
+    const f=prog,p=slerp(S,E,f),alt=Math.sin(f*Math.PI)*h,prev=slerp(S,E,Math.max(0,f-0.005));
+    if(!PLANE)PLANE={type:'plane',lat:0,lng:0,alt:0};
     PLANE.heading=bearing(prev,p);PLANE.lat=p.lat;PLANE.lng=p.lng;PLANE.alt=alt;
     world.htmlElementsData(allMarks());
     if(PLANE.rot)PLANE.rot.style.transform=`rotate(${PLANE.heading-PLANE_BASE}deg)`;
     world.pointOfView({lat:p.lat,lng:p.lng,altitude:keepAlt});
-    if(step>=total){clearInterval(timer);setTimeout(()=>{if(E!==destE)return;arrived=true;PLANE=null;drawMarkers();hint.textContent='🎉 已飛抵 '+E.name+'，搜尋附近景點中...';world.arcsData([]);world.pointOfView({lat:E.lat,lng:E.lng,altitude:keepAlt},1500);loadSpots(E)},800)}  // 飛機停在終點 0.8 秒後才收尾
-  },30);
+    if(prog>=1){stopFly();setTimeout(()=>{if(E!==destE)return;arrived=true;PLANE=null;drawMarkers();hint.textContent='🎉 已飛抵 '+E.name+'，搜尋附近景點中...';world.arcsData([]);world.pointOfView({lat:E.lat,lng:E.lng,altitude:keepAlt},1500);loadSpots(E)},800)}  // 飛機停在終點 0.8 秒後才收尾
+  };
+  flyRaf=requestAnimationFrame(frame);
 };
 </script>
 <!-- ===== [PWA 新增 4/4] Service Worker 註冊與安裝流程 開始 ===== -->
